@@ -3,82 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High-Tech Pro | Dashboard Dynamique</title>
+    <title>High-Tech Pro | Dashboard v2</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
 <body>
 
-    <h1>🚀 Stock Client en Direct</h1>
-    
-    <div id="vitrine" class="container">
+    <header style="text-align: center; margin-bottom: 30px;">
+        <h1>🚀 Catalogue Dynamique</h1>
+        <div class="controls" style="max-width: 600px; margin: 0 auto; display: flex; gap: 10px;">
+            <input type="text" id="search" placeholder="Rechercher un produit..." oninput="filtrer()" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+            <select id="sort" onchange="filtrer()" style="padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                <option value="nom">Nom (A-Z)</option>
+                <option value="prix_asc">Prix croissant</option>
+                <option value="prix_desc">Prix décroissant</option>
+            </select>
         </div>
+    </header>
+
+    <div id="notification" style="display:none; position: fixed; top: 20px; right: 20px; background: #22c55e; color: white; padding: 15px 25px; border-radius: 8px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
+    
+    <div id="vitrine" class="container"></div>
 
     <script>
-        // Connexion à ton PocketBase local
         const pb = new PocketBase('http://127.0.0.1:8090');
+        let tousLesProduits = [];
 
         async function chargerBoutique() {
             try {
-                // On récupère la liste des produits
-                const records = await pb.collection('produits').getFullList();
-                const vitrine = document.getElementById('vitrine');
-                vitrine.innerHTML = ''; 
+                tousLesProduits = await pb.collection('produits').getFullList({ sort: 'nom' });
+                filtrer();
+            } catch (err) { console.error(err); }
+        }
 
-                records.forEach(p => {
-                    const urlPhoto = p.photo ? pb.files.getUrl(p, p.photo) : 'https://via.placeholder.com/400';
-                    const alerte = p.stock < 10;
+        function filtrer() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const tri = document.getElementById('sort').value;
+            const vitrine = document.getElementById('vitrine');
+            
+            let produits = tousLesProduits.filter(p => p.nom.toLowerCase().includes(query));
 
-                    vitrine.innerHTML += `
-                        <div class="card">
-                            <div class="image-container">
-                                <img src="${urlPhoto}" alt="${p.nom}">
-                            </div>
-                            <div class="content">
-                                <span class="stock-badge ${alerte ? 'low-stock' : ''}">
-                                    ${alerte ? '⚠️ Stock Faible : ' : '✅ En stock : '}${p.stock}
-                                </span>
-                                <h3>${p.nom}</h3>
-                                <div class="price">${p.prix} €</div>
-                            </div>
-                            <button class="btn-buy" onclick="commander('${p.id}', ${p.stock}, '${p.nom}')">
-                                Acheter cet article
-                            </button>
+            // Logique de tri
+            if (tri === 'prix_asc') produits.sort((a,b) => a.prix - b.prix);
+            if (tri === 'prix_desc') produits.sort((a,b) => b.prix - a.prix);
+
+            vitrine.innerHTML = ''; 
+            produits.forEach(p => {
+                const urlPhoto = p.photo ? pb.files.getUrl(p, p.photo) : 'https://via.placeholder.com/400';
+                const alerte = p.stock < 5;
+
+                vitrine.innerHTML += `
+                    <div class="card">
+                        <div class="image-container"><img src="${urlPhoto}"></div>
+                        <div class="content">
+                            <span class="stock-badge ${alerte ? 'low-stock' : ''}">
+                                ${alerte ? '⚠️ Urgent : ' : '✅ '}${p.stock} en stock
+                            </span>
+                            <h3>${p.nom}</h3>
+                            <div class="price">${p.prix} €</div>
                         </div>
-                    `;
-                });
-            } catch (err) {
-                console.error("Erreur PocketBase :", err);
-            }
+                        <div style="display:flex; padding: 0 25px 25px;">
+                            <button class="btn-buy" style="flex:3; margin:0;" onclick="acheter('${p.id}', ${p.stock}, '${p.nom}')">Acheter</button>
+                            <button onclick="ajouterStock('${p.id}', ${p.stock})" style="flex:1; margin-left:5px; border-radius:12px; border:1px solid #ddd; cursor:pointer;">+1</button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        // FONCTION MAGIQUE : Diminue le stock lors du clic
-        async function commander(id, stockActuel, nom) {
-            if (stockActuel <= 0) {
-                alert("Désolé, " + nom + " est épuisé !");
-                return;
-            }
-
-            try {
-                const nouveauStock = stockActuel - 1;
-
-                // Mise à jour dans PocketBase
-                await pb.collection('produits').update(id, {
-                    "stock": nouveauStock
-                });
-
-                alert("Merci pour votre achat ! Stock restant de " + nom + " : " + nouveauStock);
-                
-                // On recharge la liste pour voir le changement sans rafraîchir toute la page
-                chargerBoutique();
-
-            } catch (err) {
-                console.error("Erreur de mise à jour :", err);
-                alert("Erreur : Vérifie que la règle 'Update' est déverrouillée dans PocketBase !");
-            }
+        function showNotify(msg) {
+            const n = document.getElementById('notification');
+            n.innerText = msg; n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 3000);
         }
 
-        // Lancement au chargement de la page
+        async function acheter(id, stock, nom) {
+            if (stock <= 0) return alert("Rupture !");
+            await pb.collection('produits').update(id, { "stock": stock - 1 });
+            showNotify("Vendu : " + nom);
+            chargerBoutique();
+        }
+
+        async function ajouterStock(id, stock) {
+            await pb.collection('produits').update(id, { "stock": stock + 1 });
+            showNotify("Stock augmenté !");
+            chargerBoutique();
+        }
+
         chargerBoutique();
     </script>
 </body>
