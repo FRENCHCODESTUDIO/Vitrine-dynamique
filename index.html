@@ -2,49 +2,51 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Ma Vitrine Client</title>
+    <title>High-Tech Pro | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 40px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
-        .price { color: #2ecc71; font-weight: bold; font-size: 1.2em; }
-        .stock { font-size: 0.9em; color: #666; }
-    </style>
 </head>
 <body>
 
-    <h1>Mon Catalogue Dynamique</h1>
-    <div id="vitrine" class="grid">
+    <h1>🚀 Stock Client en Direct</h1>
+    
+    <div id="vitrine" class="container">
         </div>
 
     <script>
-        // On se connecte à ton PocketBase qui tourne sur ton PC
         const pb = new PocketBase('http://127.0.0.1:8090');
 
-        async function chargerProduits() {
+        async function chargerBoutique() {
             try {
                 const records = await pb.collection('produits').getFullList();
                 const vitrine = document.getElementById('vitrine');
+                vitrine.innerHTML = ''; 
 
                 records.forEach(p => {
-                    const urlPhoto = pb.files.getUrl(p, p.photo);
+                    const urlPhoto = p.photo ? pb.files.getUrl(p, p.photo) : 'https://via.placeholder.com/400';
+                    const alerte = p.stock < 10;
+
                     vitrine.innerHTML += `
                         <div class="card">
-                            <img src="${urlPhoto}" alt="${p.nom}">
-                            <h3>${p.nom}</h3>
-                            <p class="price">${p.prix} €</p>
-                            <p class="stock">En stock : ${p.stock}</p>
+                            <div class="image-container">
+                                <img src="${urlPhoto}" alt="${p.nom}">
+                            </div>
+                            <div class="content">
+                                <span class="stock-badge ${alerte ? 'low-stock' : ''}">
+                                    ${alerte ? '⚠️ Stock Faible : ' : '✅ En stock : '}${p.stock}
+                                </span>
+                                <h3>${p.nom}</h3>
+                                <div class="price">${p.prix} €</div>
+                            </div>
+                            <button class="btn-buy">Commander l'article</button>
                         </div>
                     `;
                 });
             } catch (err) {
-                console.log("Erreur : Vérifie que ton PocketBase est bien lancé !", err);
+                console.error("Erreur PocketBase", err);
             }
         }
-
-        chargerProduits();
+        chargerBoutique();
     </script>
 </body>
 </html>
