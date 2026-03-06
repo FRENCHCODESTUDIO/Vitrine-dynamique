@@ -78,3 +78,66 @@ function filtrerParCategorie(nomCategorie) {
     // On relance l'affichage avec la liste filtrée
     afficherProduits(produitsFiltrés); 
 }
+
+let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
+
+function toggleCart() {
+    const sidebar = document.getElementById('cart-sidebar');
+    sidebar.style.right = sidebar.style.right === '0px' ? '-400px' : '0px';
+    updateCartDisplay();
+}
+
+function ajouterAuPanier(id, nom, prix) {
+    panier.push({ id, nom, prix });
+    localStorage.setItem('monPanier', JSON.stringify(panier));
+    showNotify(nom + " ajouté au panier !");
+    updateCartDisplay();
+}
+
+function updateCartDisplay() {
+    const itemsDiv = document.getElementById('cart-items');
+    const countSpan = document.getElementById('cart-count');
+    const totalSpan = document.getElementById('cart-total');
+    
+    itemsDiv.innerHTML = '';
+    let total = 0;
+    
+    panier.forEach((item, index) => {
+        total += item.prix;
+        itemsDiv.innerHTML += `
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>${item.nom}</span>
+                <span>${item.prix} € <button onclick="retirerDuPanier(${index})" style="color:red; border:none; background:none; cursor:pointer;">❌</button></span>
+            </div>`;
+    });
+    
+    countSpan.innerText = panier.length;
+    totalSpan.innerText = total;
+}
+
+function retirerDuPanier(index) {
+    panier.splice(index, 1);
+    localStorage.setItem('monPanier', JSON.stringify(panier));
+    updateCartDisplay();
+}
+
+// La fonction qui fait enfin baisser le stock dans PocketBase
+async function validerCommande() {
+    if (panier.length === 0) return alert("Le panier est vide !");
+    
+    try {
+        for (const item of panier) {
+            // Ici, on pourrait ajouter une logique pour vérifier le stock réel avant de valider
+            const record = await pb.collection('produits').getOne(item.id);
+            await pb.collection('produits').update(item.id, { "stock": record.stock - 1 });
+        }
+        
+        alert("Commande validée ! Merci de votre confiance.");
+        panier = [];
+        localStorage.removeItem('monPanier');
+        toggleCart();
+        chargerBoutique(); // Rafraîchit les cartes pour voir les nouveaux stocks
+    } catch (err) {
+        alert("Erreur lors de la validation. Vérifie tes stocks !");
+    }
+}
