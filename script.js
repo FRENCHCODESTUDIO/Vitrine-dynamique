@@ -2,19 +2,47 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 let tousLesProduits = [];
 let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
 
-// 1. Charger les données depuis PocketBase
+// 1. Charger les données et générer l'interface
 async function chargerBoutique() {
     try {
+        // Récupération de la collection 'produits'
         tousLesProduits = await pb.collection('produits').getFullList({ sort: 'nom' });
+        
+        // Génération automatique des boutons de catégories
+        genererBoutonsCategories();
+        
+        // Affichage initial
         afficherProduits(tousLesProduits);
         updateCartDisplay();
     } catch (err) {
         console.error("Erreur PocketBase:", err);
-        document.getElementById('vitrine').innerHTML = "<p style='color:white; text-align:center;'>⚠️ Erreur : Lancez PocketBase sur votre PC !</p>";
+        document.getElementById('vitrine').innerHTML = `
+            <div style="color:white; text-align:center; padding:50px;">
+                <p>⚠️ PocketBase n'est pas connecté.</p>
+                <small>Lancez pocketbase.exe sur votre PC</small>
+            </div>`;
     }
 }
 
-// 2. Afficher les cartes produits
+// 2. Créer les boutons de catégories dynamiquement
+function genererBoutonsCategories() {
+    const barre = document.getElementById('category-bar');
+    if (!barre) return;
+
+    // On extrait les catégories uniques (on enlève les doublons et les cases vides)
+    const categoriesUniques = [...new Set(tousLesProduits.map(p => p.categorie).filter(c => c))];
+
+    let html = `<button onclick="filtrerParCategorie('Tous')" class="btn-cat">Tout voir</button>`;
+    
+    categoriesUniques.forEach(cat => {
+        // Le bouton envoie exactement le nom stocké en base de données
+        html += `<button onclick="filtrerParCategorie('${cat}')" class="btn-cat">${cat}</button>`;
+    });
+
+    barre.innerHTML = html;
+}
+
+// 3. Affichage des cartes produits
 function afficherProduits(liste) {
     const vitrine = document.getElementById('vitrine');
     vitrine.innerHTML = ''; 
@@ -42,7 +70,23 @@ function afficherProduits(liste) {
     });
 }
 
-// 3. Gestion du Panier
+// 4. Filtrage
+function filtrerParCategorie(cat) {
+    if (cat === 'Tous') {
+        afficherProduits(tousLesProduits);
+    } else {
+        const resultats = tousLesProduits.filter(p => p.categorie === cat);
+        afficherProduits(resultats);
+    }
+}
+
+function filtrer() {
+    const query = document.getElementById('search').value.toLowerCase();
+    const resultats = tousLesProduits.filter(p => p.nom.toLowerCase().includes(query));
+    afficherProduits(resultats);
+}
+
+// 5. Gestion du Panier (Sidebar & LocalStorage)
 function toggleCart() {
     const sidebar = document.getElementById('cart-sidebar');
     sidebar.classList.toggle('open');
@@ -68,7 +112,7 @@ function updateCartDisplay() {
         itemsDiv.innerHTML += `
             <div class="cart-item">
                 <span>${item.nom}</span>
-                <span>${item.prix} € <button onclick="retirerDuPanier(${index})">❌</button></span>
+                <span>${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer;">❌</button></span>
             </div>`;
     });
     
@@ -82,7 +126,6 @@ function retirerDuPanier(index) {
     updateCartDisplay();
 }
 
-// 4. Validation et mise à jour du stock PocketBase
 async function validerCommande() {
     if (panier.length === 0) return alert("Le panier est vide !");
     
@@ -91,33 +134,23 @@ async function validerCommande() {
             const record = await pb.collection('produits').getOne(item.id);
             await pb.collection('produits').update(item.id, { "stock": record.stock - 1 });
         }
-        alert("Commande validée ! Le stock a été mis à jour.");
+        alert("Commande validée !");
         panier = [];
         localStorage.removeItem('monPanier');
         updateCartDisplay();
         toggleCart();
         chargerBoutique();
     } catch (err) {
-        alert("Erreur lors de la validation. Vérifie que PocketBase est ouvert !");
+        alert("Erreur. Vérifiez que PocketBase est lancé.");
     }
-}
-
-// 5. Filtres et Recherche
-function filtrerParCategorie(cat) {
-    const resultats = (cat === 'Tous') ? tousLesProduits : tousLesProduits.filter(p => p.categorie === cat);
-    afficherProduits(resultats);
-}
-
-function filtrer() {
-    const query = document.getElementById('search').value.toLowerCase();
-    const resultats = tousLesProduits.filter(p => p.nom.toLowerCase().includes(query));
-    afficherProduits(resultats);
 }
 
 function showNotify(msg) {
     const n = document.getElementById('notification');
-    n.innerText = msg; n.style.display = 'block';
+    n.innerText = msg;
+    n.style.display = 'block';
     setTimeout(() => n.style.display = 'none', 3000);
 }
 
+// Lancement
 chargerBoutique();
