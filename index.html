@@ -24,6 +24,18 @@
             </select>
         </div>
     </header>
+    <div id="cart-icon" onclick="toggleCart()" style="position: fixed; top: 20px; right: 20px; cursor: pointer; background: var(--primary); color: white; padding: 15px; border-radius: 50%; z-index: 1001;">
+    🛒 <span id="cart-count">0</span>
+</div>
+
+<div id="cart-sidebar" style="position: fixed; right: -400px; top: 0; width: 350px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 1002; transition: 0.3s; padding: 20px;">
+    <button onclick="toggleCart()">Fermer ✖</button>
+    <h2>Mon Panier</h2>
+    <div id="cart-items"></div>
+    <hr>
+    <div style="font-weight: bold; font-size: 1.2rem;">Total: <span id="cart-total">0</span> €</div>
+    <button onclick="validerCommande()" style="width: 100%; background: var(--success); color: white; padding: 15px; margin-top: 20px; border: none; border-radius: 8px; cursor: pointer;">Valider la commande</button>
+</div>
 
     <div id="notification"></div>
     <div id="vitrine" class="container"></div>
