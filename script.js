@@ -1,4 +1,4 @@
-const pb = new PocketBase('http://127.0.0.1:8090');
+const pb = new PocketBase('https://test-sho.pockethost.io/');
 let tousLesProduits = [];
 let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
 
