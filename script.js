@@ -64,3 +64,17 @@ async function ajouterStock(id, stock) {
 
 // Lancement automatique
 chargerBoutique();
+
+// Fonction pour n'afficher qu'une seule catégorie
+function filtrerParCategorie(nomCategorie) {
+    const vitrine = document.getElementById('vitrine');
+    
+    // On filtre notre liste principale
+    let produitsFiltrés = tousLesProduits.filter(p => p.categorie === nomCategorie);
+    
+    // Si on clique sur "Tout", on affiche tout
+    if (nomCategorie === 'Tous') produitsFiltrés = tousLesProduits;
+
+    // On relance l'affichage avec la liste filtrée
+    afficherProduits(produitsFiltrés); 
+}
