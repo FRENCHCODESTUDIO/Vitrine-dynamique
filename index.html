@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>High-Tech Pro | Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Tech Pro | Dashboard Dynamique</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
@@ -14,10 +15,12 @@
         </div>
 
     <script>
+        // Connexion à ton PocketBase local
         const pb = new PocketBase('http://127.0.0.1:8090');
 
         async function chargerBoutique() {
             try {
+                // On récupère la liste des produits
                 const records = await pb.collection('produits').getFullList();
                 const vitrine = document.getElementById('vitrine');
                 vitrine.innerHTML = ''; 
@@ -38,14 +41,44 @@
                                 <h3>${p.nom}</h3>
                                 <div class="price">${p.prix} €</div>
                             </div>
-                            <button class="btn-buy">Commander l'article</button>
+                            <button class="btn-buy" onclick="commander('${p.id}', ${p.stock}, '${p.nom}')">
+                                Acheter cet article
+                            </button>
                         </div>
                     `;
                 });
             } catch (err) {
-                console.error("Erreur PocketBase", err);
+                console.error("Erreur PocketBase :", err);
             }
         }
+
+        // FONCTION MAGIQUE : Diminue le stock lors du clic
+        async function commander(id, stockActuel, nom) {
+            if (stockActuel <= 0) {
+                alert("Désolé, " + nom + " est épuisé !");
+                return;
+            }
+
+            try {
+                const nouveauStock = stockActuel - 1;
+
+                // Mise à jour dans PocketBase
+                await pb.collection('produits').update(id, {
+                    "stock": nouveauStock
+                });
+
+                alert("Merci pour votre achat ! Stock restant de " + nom + " : " + nouveauStock);
+                
+                // On recharge la liste pour voir le changement sans rafraîchir toute la page
+                chargerBoutique();
+
+            } catch (err) {
+                console.error("Erreur de mise à jour :", err);
+                alert("Erreur : Vérifie que la règle 'Update' est déverrouillée dans PocketBase !");
+            }
+        }
+
+        // Lancement au chargement de la page
         chargerBoutique();
     </script>
 </body>
