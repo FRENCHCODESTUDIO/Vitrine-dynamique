@@ -10,14 +10,14 @@
 <body>
 
     <header>
-        <h1>🚀 Catalogue Dynamique</h1>
-        
-        <div class="category-filters">
-            <button onclick="filtrerParCategorie('Tous')" class="btn-cat">Tout voir</button>
-            <button onclick="filtrerParCategorie('Batterie')" class="btn-cat">Batteries ⚡</button>
-            <button onclick="filtrerParCategorie('Pneu')" class="btn-cat">Pneus 🚗</button>
-            <button onclick="filtrerParCategorie('Informatique')" class="btn-cat">Composants 💻</button>
-        </div>
+    <h1>🚀 Catalogue Dynamique</h1>
+    
+    <div id="category-bar" class="category-filters"></div>
+
+    <div class="controls">
+        <input type="text" id="search" placeholder="Rechercher un produit..." oninput="filtrer()">
+    </div>
+</header>
 
         <div class="controls">
             <input type="text" id="search" placeholder="Rechercher un produit..." oninput="filtrer()">
