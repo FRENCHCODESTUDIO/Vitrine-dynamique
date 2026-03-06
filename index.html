@@ -10,6 +10,11 @@
 
     <header>
         <h1>🚀 Catalogue Dynamique</h1>
+        <div class="categories-bar">
+    <button onclick="filtrerParCategorie('Tous')">Tout voir</button>
+    <button onclick="filtrerParCategorie('Batterie')">Batteries ⚡</button>
+    <button onclick="filtrerParCategorie('Pneu')">Pneus 🚗</button>
+</div>
         <div class="controls">
             <input type="text" id="search" placeholder="Rechercher..." oninput="filtrer()">
             <select id="sort" onchange="filtrer()">
