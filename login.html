@@ -2,45 +2,80 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion - TechShop</title>
+    <title>Connexion / Inscription | TechStore</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
-<body style="background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif;">
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a;">
 
-    <div style="background: #1e1e1e; padding: 40px; border-radius: 10px; border: 1px solid #333; width: 350px;">
-        <h2 style="text-align: center; margin-bottom: 25px;">Se connecter</h2>
-        
-        <form id="login-form" style="display: flex; flex-direction: column; gap: 15px;">
-            <input type="email" id="email" placeholder="Email" required style="padding: 12px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white;">
-            <input type="password" id="password" placeholder="Mot de passe" required style="padding: 12px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white;">
-            <button type="submit" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Connexion</button>
-        </form>
-        
-        <p id="error-msg" style="color: #ef4444; font-size: 0.9rem; text-align: center; margin-top: 15px; display: none;"></p>
+    <div style="width: 100%; max-width: 400px; padding: 20px;">
+        <div id="login-box" style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155;">
+            <h2 style="text-align: center; margin-bottom: 30px;">Bon retour !</h2>
+            <form id="login-form" style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="email" id="email" placeholder="Email" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <input type="password" id="password" placeholder="Mot de passe" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <button type="submit" class="btn-buy" style="border-radius: 8px;">Se connecter</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8;">
+                Pas de compte ? <a href="#" onclick="toggleAuth()" style="color: #3b82f6; text-decoration: none;">Créer un compte</a>
+            </p>
+        </div>
+
+        <div id="register-box" style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; display: none;">
+            <h2 style="text-align: center; margin-bottom: 30px;">Rejoignez-nous</h2>
+            <form id="register-form" style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="text" id="reg-name" placeholder="Nom complet" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <input type="email" id="reg-email" placeholder="Email" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <input type="password" id="reg-password" placeholder="Mot de passe (8+ caractères)" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <button type="submit" class="btn-buy" style="background: #4ade80; color: #000; border-radius: 8px;">Créer mon compte</button>
+            </form>
+            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8;">
+                Déjà inscrit ? <a href="#" onclick="toggleAuth()" style="color: #3b82f6; text-decoration: none;">Se connecter</a>
+            </p>
+        </div>
         
         <div style="text-align: center; margin-top: 20px;">
-            <a href="index.html" style="color: #888; text-decoration: none; font-size: 0.9rem;">← Retour boutique</a>
+            <a href="index.html" style="color: #64748b; text-decoration: none;">← Retour boutique</a>
         </div>
     </div>
 
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
 
+        function toggleAuth() {
+            const l = document.getElementById('login-box');
+            const r = document.getElementById('register-box');
+            l.style.display = l.style.display === 'none' ? 'block' : 'none';
+            r.style.display = r.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Connexion
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const errorP = document.getElementById('error-msg');
-
             try {
-                await pb.collection('users').authWithPassword(email, pass);
-                // On utilise replace pour éviter de revenir en arrière sur le login
-                window.location.replace("index.html");
-            } catch (err) {
-                errorP.innerText = "Email ou mot de passe incorrect";
-                errorP.style.display = "block";
-            }
+                await pb.collection('users').authWithPassword(
+                    document.getElementById('email').value,
+                    document.getElementById('password').value
+                );
+                window.location.href = "index.html";
+            } catch (err) { alert("Erreur: " + err.message); }
+        };
+
+        // Inscription
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-password').value;
+            try {
+                await pb.collection('users').create({
+                    email,
+                    password: pass,
+                    passwordConfirm: pass,
+                    name: document.getElementById('reg-name').value
+                });
+                alert("Compte créé avec succès ! Connectez-vous.");
+                toggleAuth();
+            } catch (err) { alert("Erreur: " + err.message); }
         };
     </script>
 </body>
