@@ -5,30 +5,41 @@
     <title>Paiement Sécurisé | TechStore</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body style="background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+<body style="background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;">
 
-    <div style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; width: 100%; max-width: 500px;">
-        <h2 style="text-align: center; color: #4ade80;">💳 Finaliser votre commande</h2>
-        <p style="text-align: center; margin-bottom: 30px;">Total à régler : <span id="montant-final" style="font-weight: bold; font-size: 1.5rem;">0</span> €</p>
+    <div style="background: #1e293b; padding: 40px; border-radius: 20px; border: 1px solid #334155; width: 100%; max-width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <h2 style="text-align: center; color: #4ade80; margin-bottom: 10px;">💳 Paiement Sécurisé</h2>
+        <p style="text-align: center; color: #94a3b8; margin-bottom: 30px;">Finalisez votre commande en toute sécurité</p>
 
-        <form id="payment-form" style="display: flex; flex-direction: column; gap: 15px;">
-            <input type="text" placeholder="Nom sur la carte" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
-            <input type="text" placeholder="Numéro de carte (Simulation)" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+        <div style="background: #0f172a; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 25px; border: 1px solid #334155;">
+            <span style="color: #94a3b8;">Montant total :</span><br>
+            <span id="display-total" style="font-size: 2rem; font-weight: bold; color: white;">0</span> <span style="font-size: 1.5rem;">€</span>
+        </div>
+
+        <form id="pay-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" placeholder="Nom sur la carte" required>
+            <input type="text" placeholder="0000 0000 0000 0000" maxlength="16" required>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" placeholder="MM/AA" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
-                <input type="text" placeholder="CVC" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <input type="text" placeholder="MM/AA" maxlength="5" required>
+                <input type="text" placeholder="CVC" maxlength="3" required>
             </div>
-            <button type="submit" class="btn-buy" style="margin-top: 10px; background: #4ade80; color: black;">Confirmer le paiement</button>
+            <button type="submit" class="btn-buy" style="margin-top: 15px; border-radius: 10px; background: #4ade80; color: #064e3b;">Payer maintenant</button>
         </form>
+        
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: #64748b; text-decoration: none; font-size: 0.9rem;">Annuler et retourner au site</a>
+        </p>
     </div>
 
     <script>
-        // Afficher le total stocké
-        document.getElementById('montant-final').innerText = localStorage.getItem('dernierTotal') || "0";
+        // Récupérer le prix stocké par le JS précédent
+        const total = localStorage.getItem('totalAPayer') || "0";
+        document.getElementById('display-total').innerText = total;
 
-        document.getElementById('payment-form').onsubmit = (e) => {
+        document.getElementById('pay-form').onsubmit = (e) => {
             e.preventDefault();
-            alert("✅ Paiement accepté ! Merci de votre confiance.");
+            alert("✅ Paiement validé avec succès ! Merci de votre achat.");
+            localStorage.removeItem('totalAPayer');
             window.location.href = "index.html";
         };
     </script>
