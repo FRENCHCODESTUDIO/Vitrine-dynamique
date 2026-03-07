@@ -10,14 +10,13 @@
 <body>
 
     <header>
-    <h1>🚀 Catalogue Dynamique</h1>
-    
-    <div id="category-bar" class="category-filters"></div>
+        <div id="user-menu" style="display: flex; justify-content: flex-end; gap: 15px; padding: 10px 20px; font-size: 0.9rem; align-items: center;">
+            <a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Connexion</a>
+        </div>
 
-    <div class="controls">
-        <input type="text" id="search" placeholder="Rechercher un produit..." oninput="filtrer()">
-    </div>
-</header>
+        <h1>🚀 Catalogue Dynamique</h1>
+        
+        <div id="category-bar" class="category-filters"></div>
 
         <div class="controls">
             <input type="text" id="search" placeholder="Rechercher un produit..." oninput="filtrer()">
@@ -42,6 +41,7 @@
     </div>
 
     <div id="notification"></div>
+    
     <div id="vitrine" class="container"></div>
 
     <script src="script.js"></script>
