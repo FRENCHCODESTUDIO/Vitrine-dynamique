@@ -7,75 +7,107 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
     <style>
         body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
-        .admin-card { background: #1e293b; padding: 30px; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #334155; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;}
-        .btn-add { background: #fbbf24; color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        .btn-add:hover { background: #f59e0b; }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #94a3b8; text-decoration: none; }
+        .admin-container { max-width: 900px; margin: auto; }
+        .admin-card { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 30px; }
+        input { width: 100%; padding: 10px; margin: 5px 0 15px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;}
+        .btn-add { background: #4ade80; color: #000; font-weight: bold; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; }
+        
+        /* Style pour la liste de modification */
+        .product-list-item { display: flex; align-items: center; background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 10px; gap: 15px; border: 1px solid #334155; }
+        .product-list-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-update { background: #3b82f6; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="admin-card">
-        <h2 style="text-align: center; color: #fbbf24;">📦 Ajouter un Produit</h2>
-        
-        <form id="add-product-form">
-            <label>Nom du produit</label>
-            <input type="text" id="nom" placeholder="ex: Thermalright Peerless Assassin" required>
+    <div class="admin-container">
+        <h1 style="text-align: center; color: #fbbf24;">⚙️ Espace Gestion</h1>
+        <a href="index.html" style="color: #94a3b8; text-decoration: none;">← Retour Boutique</a>
 
-            <label>Prix (€)</label>
-            <input type="number" id="prix" placeholder="ex: 65" required>
+        <div class="admin-card" style="margin-top: 20px;">
+            <h2 style="margin-top:0;">📦 Ajouter un nouveau produit</h2>
+            <form id="add-product-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <input type="text" id="nom" placeholder="Nom du produit" required>
+                    <input type="text" id="categorie" placeholder="Catégorie (ex: Alims)" required>
+                    <input type="number" id="prix" placeholder="Prix (€)" required>
+                    <input type="number" id="stock" placeholder="Stock" required>
+                </div>
+                <input type="file" id="photo" accept="image/*">
+                <button type="submit" class="btn-add">Mettre en ligne</button>
+            </form>
+        </div>
 
-            <label>Catégorie</label>
-            <input type="text" id="categorie" placeholder="ex: Watercooling" required>
-
-            <label>Stock initial</label>
-            <input type="number" id="stock" placeholder="ex: 10" required>
-
-            <label>Photo du produit</label>
-            <input type="file" id="photo" accept="image/*">
-
-            <button type="submit" class="btn-add">🚀 Mettre en ligne</button>
-        </form>
-
-        <a href="index.html" class="back-link">← Retour à la boutique</a>
+        <h2 style="color: #fbbf24;">✏️ Modifier le stock existant</h2>
+        <div id="admin-product-list">
+            </div>
     </div>
 
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
 
-        // Sécurité : Si pas admin, on dégage
-        if (!pb.authStore.isValid || pb.authStore.model.name !== 'Admin') {
-            alert("Accès refusé !");
+        // Sécurité
+        if (!pb.authStore.isValid || pb.authStore.model.email !== 'admin@test.com') {
             window.location.href = "index.html";
         }
 
-        const form = document.getElementById('add-product-form');
-
-        form.onsubmit = async (e) => {
-            e.preventDefault();
+        // CHARGER LA LISTE DE GESTION
+        async function chargerGestion() {
+            const produits = await pb.collection('produits').getFullList({ sort: '-created' });
+            const container = document.getElementById('admin-product-list');
             
-            // Préparation des données (FormData est obligatoire pour envoyer une image)
+            container.innerHTML = produits.map(p => `
+                <div class="product-list-item">
+                    <img src="${p.photo ? pb.files.getUrl(p, p.photo) : 'https://via.placeholder.com/50'}" >
+                    <div style="flex-grow: 1;">
+                        <strong style="display:block;">${p.nom}</strong>
+                        <small>${p.categorie} | ${p.prix}€ | Stock: ${p.stock}</small>
+                    </div>
+                    <div>
+                        <button onclick="modifierStock('${p.id}', ${p.stock})" class="btn-update">Stock ±</button>
+                        <button onclick="supprimerProduit('${p.id}')" class="btn-delete">Supprimer</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // SUPPRIMER
+        async function supprimerProduit(id) {
+            if (confirm("Supprimer ce produit définitivement ?")) {
+                await pb.collection('produits').delete(id);
+                chargerGestion();
+            }
+        }
+
+        // MODIFIER STOCK RAPIDEMENT
+        async function modifierStock(id, actuel) {
+            const nouveau = prompt("Nouveau stock :", actuel);
+            if (nouveau !== null) {
+                await pb.collection('produits').update(id, { stock: nouveau });
+                chargerGestion();
+            }
+        }
+
+        // AJOUTER
+        document.getElementById('add-product-form').onsubmit = async (e) => {
+            e.preventDefault();
             const formData = new FormData();
             formData.append('nom', document.getElementById('nom').value);
             formData.append('prix', document.getElementById('prix').value);
             formData.append('categorie', document.getElementById('categorie').value);
             formData.append('stock', document.getElementById('stock').value);
-            
             const photoFile = document.getElementById('photo').files[0];
-            if (photoFile) {
-                formData.append('photo', photoFile);
-            }
+            if (photoFile) formData.append('photo', photoFile);
 
             try {
                 await pb.collection('produits').create(formData);
-                alert("Produit ajouté avec succès !");
-                form.reset(); // Vide le formulaire
-            } catch (err) {
-                console.error(err);
-                alert("Erreur lors de l'ajout : " + err.message);
-            }
+                alert("Ajouté !");
+                location.reload();
+            } catch (err) { alert(err.message); }
         };
+
+        chargerGestion();
     </script>
 </body>
 </html>
