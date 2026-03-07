@@ -3,47 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>High-Tech & Auto Pro | Dashboard</title>
+    <title>TechStore | Boutique High-Tech</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
 <body>
 
     <header>
-        <div id="user-menu" style="display: flex; justify-content: flex-end; gap: 15px; padding: 10px 20px; font-size: 0.9rem; align-items: center; min-height: 40px; color: white;">
-            <a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Connexion</a>
-        </div>
+        <div id="user-menu" style="display: flex; justify-content: flex-end; align-items: center; gap: 20px;">
+            </div>
 
-        <h1>🚀 Catalogue Dynamique</h1>
+        <h1>TechStore Pro</h1>
         
         <div id="category-bar" class="category-filters"></div>
 
         <div class="controls">
-            <input type="text" id="search" placeholder="Rechercher un produit..." oninput="filtrer()">
+            <input type="text" id="search" placeholder="Chercher un composant (ex: Thermalright...)" oninput="filtrer()">
         </div>
     </header>
 
+    <div id="vitrine" class="container">
+        </div>
+
     <div id="cart-icon" onclick="toggleCart()">
-        🛒 <span id="cart-count">0</span>
+        🛒 <span id="cart-count" style="position:absolute; top:0; right:0; background:red; border-radius:50%; width:20px; height:20px; font-size:12px; display:flex; justify-content:center; align-items:center;">0</span>
     </div>
 
     <div id="cart-sidebar">
-        <div style="padding: 20px;">
-            <button onclick="toggleCart()" class="btn-close">Fermer ✖</button>
-            <h2>Mon Panier</h2>
-            <div id="cart-items"></div>
-            <hr style="border: 0.5px solid #334155; margin: 20px 0;">
-            <div class="total-container">
-                Total: <span id="cart-total">0</span> €
+        <div style="padding: 25px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Mon Panier</h2>
+                <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
             </div>
-            <button onclick="validerCommande()" class="btn-validate">Valider la commande</button>
+            <div id="cart-items" style="margin-top:20px; max-height: 60vh; overflow-y:auto;"></div>
+            <div style="margin-top:20px; border-top: 1px solid #334155; padding-top:20px;">
+                <div style="display:flex; justify-content:space-between; font-size:1.3rem; font-weight:bold;">
+                    <span>Total:</span>
+                    <span id="cart-total">0</span>€
+                </div>
+                <button onclick="validerCommande()" class="btn-buy" style="margin-top:20px; border-radius:8px;">Valider l'achat</button>
+            </div>
         </div>
     </div>
 
-    <div id="notification"></div>
-    
-    <div id="vitrine" class="container">
-        </div>
+    <div id="notification" style="position:fixed; bottom:100px; right:30px; background:#4ade80; color:black; padding:15px 25px; border-radius:8px; display:none; font-weight:bold; z-index:2000;"></div>
 
     <script src="script.js"></script>
 </body>
