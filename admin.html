@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion Stock | Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
+        .admin-card { background: #1e293b; padding: 30px; border-radius: 12px; max-width: 500px; margin: auto; border: 1px solid #334155; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;}
+        .btn-add { background: #fbbf24; color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 10px; }
+        .btn-add:hover { background: #f59e0b; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #94a3b8; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-card">
+        <h2 style="text-align: center; color: #fbbf24;">📦 Ajouter un Produit</h2>
+        
+        <form id="add-product-form">
+            <label>Nom du produit</label>
+            <input type="text" id="nom" placeholder="ex: Thermalright Peerless Assassin" required>
+
+            <label>Prix (€)</label>
+            <input type="number" id="prix" placeholder="ex: 65" required>
+
+            <label>Catégorie</label>
+            <input type="text" id="categorie" placeholder="ex: Watercooling" required>
+
+            <label>Stock initial</label>
+            <input type="number" id="stock" placeholder="ex: 10" required>
+
+            <label>Photo du produit</label>
+            <input type="file" id="photo" accept="image/*">
+
+            <button type="submit" class="btn-add">🚀 Mettre en ligne</button>
+        </form>
+
+        <a href="index.html" class="back-link">← Retour à la boutique</a>
+    </div>
+
+    <script>
+        const pb = new PocketBase('http://127.0.0.1:8090');
+
+        // Sécurité : Si pas admin, on dégage
+        if (!pb.authStore.isValid || pb.authStore.model.name !== 'Admin') {
+            alert("Accès refusé !");
+            window.location.href = "index.html";
+        }
+
+        const form = document.getElementById('add-product-form');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // Préparation des données (FormData est obligatoire pour envoyer une image)
+            const formData = new FormData();
+            formData.append('nom', document.getElementById('nom').value);
+            formData.append('prix', document.getElementById('prix').value);
+            formData.append('categorie', document.getElementById('categorie').value);
+            formData.append('stock', document.getElementById('stock').value);
+            
+            const photoFile = document.getElementById('photo').files[0];
+            if (photoFile) {
+                formData.append('photo', photoFile);
+            }
+
+            try {
+                await pb.collection('produits').create(formData);
+                alert("Produit ajouté avec succès !");
+                form.reset(); // Vide le formulaire
+            } catch (err) {
+                console.error(err);
+                alert("Erreur lors de l'ajout : " + err.message);
+            }
+        };
+    </script>
+</body>
+</html>
