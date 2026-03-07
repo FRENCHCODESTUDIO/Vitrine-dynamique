@@ -15,14 +15,13 @@ async function chargerBoutique() {
         genererBoutonsCategories();
         afficherProduits(tousLesProduits);
         updateCartDisplay();
-        updateNavbar();
     } catch (err) {
         console.error("Erreur PocketBase:", err);
         document.getElementById('vitrine').innerHTML = `<p style="color:white; text-align:center;">⚠️ Erreur serveur PocketBase</p>`;
     }
 }
 
-// 3. Afficher les produits avec le STOCK
+// 3. Afficher les produits avec badges de STOCK
 function afficherProduits(liste) {
     const vitrine = document.getElementById('vitrine');
     if (!vitrine) return;
@@ -36,17 +35,20 @@ function afficherProduits(liste) {
             <div class="card">
                 <div class="image-container"><img src="${urlPhoto}" alt="${p.nom}"></div>
                 <div class="content">
-                    <small style="color:#94a3b8">${p.categorie}</small>
+                    <small style="color:#94a3b8">${p.categorie || 'Général'}</small>
                     
-                    <div style="color: ${rupture ? '#ef4444' : (alerteStock ? '#fbbf24' : '#4ade80')}; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px;">
-                        ${rupture ? '❌ Rupture de stock' : `✅ Stock: ${p.stock}`}
-                    </div>
+                    <span class="stock-badge ${alerteStock ? 'low-stock' : ''}" 
+                          style="color: ${rupture ? '#ef4444' : (alerteStock ? '#fbbf24' : '#4ade80')}; font-weight: bold; font-size: 0.8rem;">
+                        ${rupture ? 'Rupture' : p.stock + ' en stock'}
+                    </span>
 
                     <h3>${p.nom}</h3>
                     <div class="price">${p.prix} €</div>
                 </div>
-                <button class="btn-buy" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', ${p.prix})" ${rupture ? 'disabled style="background:#444; cursor:not-allowed;"' : ''}>
-                    ${rupture ? 'Indisponible' : 'Ajouter au panier'}
+                <button class="btn-buy" 
+                        onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', ${p.prix})" 
+                        ${rupture ? 'disabled style="background:#444; cursor:not-allowed;"' : ''}>
+                    ${rupture ? 'Indisponible' : 'Ajouter'}
                 </button>
             </div>`;
     }).join('');
@@ -74,7 +76,7 @@ function updateCartDisplay() {
         itemsDiv.innerHTML += `
             <div class="cart-item" style="display:flex; justify-content:space-between; margin-bottom:10px; background:#1e293b; padding:8px; border-radius:5px;">
                 <span>${item.nom}</span>
-                <span>${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button></span>
+                <span>${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer;">❌</button></span>
             </div>`;
     });
     
@@ -88,28 +90,28 @@ function retirerDuPanier(index) {
     updateCartDisplay();
 }
 
-// 5. VALIDATION COMMANDE (Baisse le stock en vrai)
+// 5. VALIDATION COMMANDE (Correction de l'erreur 404/Not Found)
 async function validerCommande() {
     if (panier.length === 0) return alert("Votre panier est vide !");
     
     try {
         for (const item of panier) {
-            // 1. On récupère le stock actuel
-            const produitFrais = await pb.collection('produits').getOne(item.id);
-            // 2. On enlève 1
+            // Récupération en temps réel pour éviter les erreurs de stock
+            const record = await pb.collection('produits').getOne(item.id);
             await pb.collection('produits').update(item.id, {
-                "stock": produitFrais.stock - 1
+                "stock": record.stock - 1
             });
         }
         
-        alert("🎉 Commande validée ! Le stock a été mis à jour.");
+        alert("🎉 Commande validée !");
         panier = [];
         localStorage.removeItem('monPanier');
         updateCartDisplay();
         toggleCart();
-        chargerBoutique(); // Refresh pour voir les nouveaux stocks
+        await chargerBoutique(); // On rafraîchit la vitrine
     } catch (err) {
-        alert("Erreur lors de la validation : " + err.message);
+        console.error(err);
+        alert("Erreur lors de la validation. Assurez-vous d'être connecté.");
     }
 }
 
@@ -118,8 +120,9 @@ function updateNavbar() {
     const userMenu = document.getElementById('user-menu');
     if (!userMenu) return;
 
-    if (pb.authStore.isValid && pb.authStore.model) {
-        const user = pb.authStore.model;
+    const user = pb.authStore.model;
+
+    if (pb.authStore.isValid && user) {
         let html = `<span style="color: #4ade80; font-weight: bold;">👋 ${user.name || 'Admin'}</span>`;
         
         if (user.email === 'admin@test.com' || user.name === 'Admin') {
@@ -138,7 +141,7 @@ function logout() {
     window.location.reload();
 }
 
-// Fonctions utilitaires
+// Fonctions utilitaires (Filtres, Notif, Sidebar)
 function toggleCart() {
     document.getElementById('cart-sidebar').classList.toggle('open');
 }
@@ -147,8 +150,8 @@ function showNotify(msg) {
     const n = document.getElementById('notification');
     if(n) {
         n.innerText = msg;
-        n.classList.add('show');
-        setTimeout(() => n.classList.remove('show'), 3000);
+        n.style.display = 'block';
+        setTimeout(() => n.style.display = 'none', 3000);
     }
 }
 
@@ -170,5 +173,5 @@ function filtrer() {
     afficherProduits(tousLesProduits.filter(p => p.nom.toLowerCase().includes(q)));
 }
 
-// Lancer le script
+// Lancement global
 initialiser();
