@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Paiement Sécurisé | TechStore</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+
+    <div style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; width: 100%; max-width: 500px;">
+        <h2 style="text-align: center; color: #4ade80;">💳 Finaliser votre commande</h2>
+        <p style="text-align: center; margin-bottom: 30px;">Total à régler : <span id="montant-final" style="font-weight: bold; font-size: 1.5rem;">0</span> €</p>
+
+        <form id="payment-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" placeholder="Nom sur la carte" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+            <input type="text" placeholder="Numéro de carte (Simulation)" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" placeholder="MM/AA" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                <input type="text" placeholder="CVC" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+            </div>
+            <button type="submit" class="btn-buy" style="margin-top: 10px; background: #4ade80; color: black;">Confirmer le paiement</button>
+        </form>
+    </div>
+
+    <script>
+        // Afficher le total stocké
+        document.getElementById('montant-final').innerText = localStorage.getItem('dernierTotal') || "0";
+
+        document.getElementById('payment-form').onsubmit = (e) => {
+            e.preventDefault();
+            alert("✅ Paiement accepté ! Merci de votre confiance.");
+            window.location.href = "index.html";
+        };
+    </script>
+</body>
+</html>
