@@ -2,26 +2,118 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 let tousLesProduits = [];
 let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
 
-// 1. Initialisation au chargement de la page
+// 1. Initialisation au chargement
 async function initialiser() {
-    updateNavbar(); // On vérifie la connexion tout de suite
+    updateNavbar();
     await chargerBoutique();
 }
 
-// 2. Charger les données PocketBase
+// 2. Charger les produits depuis PocketBase
 async function chargerBoutique() {
     try {
         tousLesProduits = await pb.collection('produits').getFullList({ sort: 'nom' });
         genererBoutonsCategories();
         afficherProduits(tousLesProduits);
         updateCartDisplay();
+        updateNavbar();
     } catch (err) {
         console.error("Erreur PocketBase:", err);
-        document.getElementById('vitrine').innerHTML = `<p style="color:white; text-align:center;">⚠️ Erreur de connexion au serveur.</p>`;
+        document.getElementById('vitrine').innerHTML = `<p style="color:white; text-align:center;">⚠️ Erreur serveur PocketBase</p>`;
     }
 }
 
-// 3. Gérer l'affichage du menu (Connexion / Admin)
+// 3. Afficher les produits avec le STOCK
+function afficherProduits(liste) {
+    const vitrine = document.getElementById('vitrine');
+    if (!vitrine) return;
+    
+    vitrine.innerHTML = liste.map(p => {
+        const urlPhoto = p.photo ? pb.files.getUrl(p, p.photo) : 'https://via.placeholder.com/400x300?text=Composant';
+        const alerteStock = p.stock < 5;
+        const rupture = p.stock <= 0;
+
+        return `
+            <div class="card">
+                <div class="image-container"><img src="${urlPhoto}" alt="${p.nom}"></div>
+                <div class="content">
+                    <small style="color:#94a3b8">${p.categorie}</small>
+                    
+                    <div style="color: ${rupture ? '#ef4444' : (alerteStock ? '#fbbf24' : '#4ade80')}; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px;">
+                        ${rupture ? '❌ Rupture de stock' : `✅ Stock: ${p.stock}`}
+                    </div>
+
+                    <h3>${p.nom}</h3>
+                    <div class="price">${p.prix} €</div>
+                </div>
+                <button class="btn-buy" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', ${p.prix})" ${rupture ? 'disabled style="background:#444; cursor:not-allowed;"' : ''}>
+                    ${rupture ? 'Indisponible' : 'Ajouter au panier'}
+                </button>
+            </div>`;
+    }).join('');
+}
+
+// 4. Gestion du Panier
+function ajouterAuPanier(id, nom, prix) {
+    panier.push({ id, nom, prix });
+    localStorage.setItem('monPanier', JSON.stringify(panier));
+    updateCartDisplay();
+    showNotify(nom + " ajouté !");
+}
+
+function updateCartDisplay() {
+    const itemsDiv = document.getElementById('cart-items');
+    const countSpan = document.getElementById('cart-count');
+    const totalSpan = document.getElementById('cart-total');
+    
+    if(!itemsDiv) return;
+    itemsDiv.innerHTML = '';
+    let total = 0;
+    
+    panier.forEach((item, index) => {
+        total += item.prix;
+        itemsDiv.innerHTML += `
+            <div class="cart-item" style="display:flex; justify-content:space-between; margin-bottom:10px; background:#1e293b; padding:8px; border-radius:5px;">
+                <span>${item.nom}</span>
+                <span>${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button></span>
+            </div>`;
+    });
+    
+    if(countSpan) countSpan.innerText = panier.length;
+    if(totalSpan) totalSpan.innerText = total;
+}
+
+function retirerDuPanier(index) {
+    panier.splice(index, 1);
+    localStorage.setItem('monPanier', JSON.stringify(panier));
+    updateCartDisplay();
+}
+
+// 5. VALIDATION COMMANDE (Baisse le stock en vrai)
+async function validerCommande() {
+    if (panier.length === 0) return alert("Votre panier est vide !");
+    
+    try {
+        for (const item of panier) {
+            // 1. On récupère le stock actuel
+            const produitFrais = await pb.collection('produits').getOne(item.id);
+            // 2. On enlève 1
+            await pb.collection('produits').update(item.id, {
+                "stock": produitFrais.stock - 1
+            });
+        }
+        
+        alert("🎉 Commande validée ! Le stock a été mis à jour.");
+        panier = [];
+        localStorage.removeItem('monPanier');
+        updateCartDisplay();
+        toggleCart();
+        chargerBoutique(); // Refresh pour voir les nouveaux stocks
+    } catch (err) {
+        alert("Erreur lors de la validation : " + err.message);
+    }
+}
+
+// 6. Gestion barre de navigation (Admin)
 function updateNavbar() {
     const userMenu = document.getElementById('user-menu');
     if (!userMenu) return;
@@ -30,7 +122,6 @@ function updateNavbar() {
         const user = pb.authStore.model;
         let html = `<span style="color: #4ade80; font-weight: bold;">👋 ${user.name || 'Admin'}</span>`;
         
-        // Si c'est l'admin (email ou nom)
         if (user.email === 'admin@test.com' || user.name === 'Admin') {
             html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; font-weight: bold; border: 1px solid #fbbf24; padding: 5px 10px; border-radius: 5px;">⚙️ Gestion</a>`;
         }
@@ -47,23 +138,18 @@ function logout() {
     window.location.reload();
 }
 
-// 4. Fonctions de la boutique
-function afficherProduits(liste) {
-    const vitrine = document.getElementById('vitrine');
-    if (!vitrine) return;
-    vitrine.innerHTML = liste.map(p => {
-        const urlPhoto = p.photo ? pb.files.getUrl(p, p.photo) : 'https://via.placeholder.com/400x300?text=Composant';
-        return `
-            <div class="card">
-                <div class="image-container"><img src="${urlPhoto}" alt="${p.nom}"></div>
-                <div class="content">
-                    <small style="color:#94a3b8">${p.categorie}</small>
-                    <h3>${p.nom}</h3>
-                    <div class="price">${p.prix} €</div>
-                </div>
-                <button class="btn-buy" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', ${p.prix})">Ajouter</button>
-            </div>`;
-    }).join('');
+// Fonctions utilitaires
+function toggleCart() {
+    document.getElementById('cart-sidebar').classList.toggle('open');
+}
+
+function showNotify(msg) {
+    const n = document.getElementById('notification');
+    if(n) {
+        n.innerText = msg;
+        n.classList.add('show');
+        setTimeout(() => n.classList.remove('show'), 3000);
+    }
 }
 
 function genererBoutonsCategories() {
@@ -84,22 +170,5 @@ function filtrer() {
     afficherProduits(tousLesProduits.filter(p => p.nom.toLowerCase().includes(q)));
 }
 
-// 5. Panier
-function ajouterAuPanier(id, nom, prix) {
-    panier.push({ id, nom, prix });
-    localStorage.setItem('monPanier', JSON.stringify(panier));
-    updateCartDisplay();
-}
-
-function updateCartDisplay() {
-    const count = document.getElementById('cart-count');
-    if (count) count.innerText = panier.length;
-    // (Tu peux ajouter ici le rendu visuel de la liste du panier si besoin)
-}
-
-function toggleCart() {
-    document.getElementById('cart-sidebar').classList.toggle('open');
-}
-
-// Lancement
+// Lancer le script
 initialiser();
