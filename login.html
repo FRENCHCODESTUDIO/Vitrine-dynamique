@@ -6,76 +6,109 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
-<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a;">
+<body style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; margin: 0; font-family: sans-serif;">
 
     <div style="width: 100%; max-width: 400px; padding: 20px;">
-        <div id="login-box" style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155;">
-            <h2 style="text-align: center; margin-bottom: 30px;">Bon retour !</h2>
+        
+        <div id="login-box" style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            <h2 style="text-align: center; margin-bottom: 30px; color: white;">Bon retour !</h2>
+            
             <form id="login-form" style="display: flex; flex-direction: column; gap: 15px;">
                 <input type="email" id="email" placeholder="Email" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
                 <input type="password" id="password" placeholder="Mot de passe" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
-                <button type="submit" class="btn-buy" style="border-radius: 8px;">Se connecter</button>
+                <button type="submit" class="btn-buy" style="border-radius: 8px; padding: 12px; cursor: pointer; background: #3b82f6; color: white; border: none; font-weight: bold;">Se connecter</button>
             </form>
-            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8;">
-                Pas de compte ? <a href="#" onclick="toggleAuth()" style="color: #3b82f6; text-decoration: none;">Créer un compte</a>
+            
+            <p style="text-align: center; margin-top: 25px; font-size: 0.9rem; color: #94a3b8;">
+                Pas encore de compte ? <br>
+                <a href="#" onclick="toggleAuth()" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Créer un compte client</a>
             </p>
         </div>
 
-        <div id="register-box" style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; display: none;">
-            <h2 style="text-align: center; margin-bottom: 30px;">Rejoignez-nous</h2>
+        <div id="register-box" style="background: #1e293b; padding: 40px; border-radius: 15px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: none;">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #4ade80;">Créer un compte</h2>
+            
             <form id="register-form" style="display: flex; flex-direction: column; gap: 15px;">
                 <input type="text" id="reg-name" placeholder="Nom complet" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
                 <input type="email" id="reg-email" placeholder="Email" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
-                <input type="password" id="reg-password" placeholder="Mot de passe (8+ caractères)" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
-                <button type="submit" class="btn-buy" style="background: #4ade80; color: #000; border-radius: 8px;">Créer mon compte</button>
+                
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <input type="password" id="reg-password" placeholder="Mot de passe" required style="padding: 12px; border-radius: 8px; background: #0f172a; border: 1px solid #334155; color: white;">
+                    <small style="color: #94a3b8; font-size: 0.75rem; padding-left: 5px;">ℹ️ Minimum 8 caractères</small>
+                </div>
+
+                <button type="submit" class="btn-buy" style="background: #4ade80; color: #000; border-radius: 8px; padding: 12px; cursor: pointer; border: none; font-weight: bold;">S'inscrire</button>
             </form>
-            <p style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8;">
-                Déjà inscrit ? <a href="#" onclick="toggleAuth()" style="color: #3b82f6; text-decoration: none;">Se connecter</a>
+            
+            <p style="text-align: center; margin-top: 25px; font-size: 0.9rem; color: #94a3b8;">
+                Déjà un compte ? <br>
+                <a href="#" onclick="toggleAuth()" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Se connecter</a>
             </p>
         </div>
         
         <div style="text-align: center; margin-top: 20px;">
-            <a href="index.html" style="color: #64748b; text-decoration: none;">← Retour boutique</a>
+            <a href="index.html" style="color: #64748b; text-decoration: none; font-size: 0.9rem;">← Retour à la boutique</a>
         </div>
     </div>
 
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
 
+        // Fonction pour basculer entre les deux formulaires
         function toggleAuth() {
             const l = document.getElementById('login-box');
             const r = document.getElementById('register-box');
-            l.style.display = l.style.display === 'none' ? 'block' : 'none';
-            r.style.display = r.style.display === 'none' ? 'block' : 'none';
+            if (l.style.display === 'none') {
+                l.style.display = 'block';
+                r.style.display = 'none';
+            } else {
+                l.style.display = 'none';
+                r.style.display = 'block';
+            }
         }
 
-        // Connexion
+        // Gestion de la Connexion
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
             try {
-                await pb.collection('users').authWithPassword(
-                    document.getElementById('email').value,
-                    document.getElementById('password').value
-                );
-                window.location.href = "index.html";
-            } catch (err) { alert("Erreur: " + err.message); }
+                await pb.collection('users').authWithPassword(email, pass);
+                window.location.replace("index.html");
+            } catch (err) { 
+                alert("Erreur : Email ou mot de passe incorrect."); 
+            }
         };
 
-        // Inscription
+        // Gestion de l'Inscription
         document.getElementById('register-form').onsubmit = async (e) => {
             e.preventDefault();
+            const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
             const pass = document.getElementById('reg-password').value;
+
             try {
+                // Création du compte
                 await pb.collection('users').create({
-                    email,
-                    password: pass,
-                    passwordConfirm: pass,
-                    name: document.getElementById('reg-name').value
+                    "username": email.split('@')[0] + Math.floor(Math.random() * 1000),
+                    "email": email,
+                    "password": pass,
+                    "passwordConfirm": pass,
+                    "name": name,
+                    "emailVisibility": true
                 });
-                alert("Compte créé avec succès ! Connectez-vous.");
-                toggleAuth();
-            } catch (err) { alert("Erreur: " + err.message); }
+                
+                alert("✨ Compte créé avec succès ! Connectez-vous maintenant.");
+                toggleAuth(); // On repasse sur le formulaire de connexion
+            } catch (err) { 
+                console.error(err);
+                // Si l'erreur vient du mot de passe trop court
+                if(pass.length < 8) {
+                    alert("Erreur : Le mot de passe doit faire au moins 8 caractères.");
+                } else {
+                    alert("Erreur lors de la création : " + err.message);
+                }
+            }
         };
     </script>
 </body>
