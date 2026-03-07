@@ -2,25 +2,25 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 let tousLesProduits = [];
 let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
 
-// 1. Initialisation au démarrage
+// 1. DÉMARRAGE
 async function initialiser() {
     updateNavbar();
     await chargerBoutique();
+    updateCartDisplay();
 }
 
-// 2. Charger les produits depuis PocketBase
+// 2. CHARGEMENT DES PRODUITS
 async function chargerBoutique() {
     try {
         tousLesProduits = await pb.collection('produits').getFullList({ sort: 'nom' });
         genererBoutonsCategories();
         afficherProduits(tousLesProduits);
-        updateCartDisplay();
     } catch (err) {
-        console.error("Erreur PocketBase:", err);
+        console.error("Erreur chargement boutique:", err);
     }
 }
 
-// 3. Afficher les cartes produits
+// 3. AFFICHAGE VITRINE
 function afficherProduits(liste) {
     const vitrine = document.getElementById('vitrine');
     if (!vitrine) return;
@@ -36,7 +36,7 @@ function afficherProduits(liste) {
                 <div class="content">
                     <small style="color:#94a3b8">${p.categorie || 'Général'}</small>
                     <div style="color: ${rupture ? '#ef4444' : (alerteStock ? '#fbbf24' : '#4ade80')}; font-weight: bold; font-size: 0.85rem; margin-top:5px;">
-                        ${rupture ? '❌ Rupture' : `✅ Stock: ${p.stock}`}
+                        ${rupture ? '❌ Rupture' : `✅ En stock: ${p.stock}`}
                     </div>
                     <h3>${p.nom}</h3>
                     <div class="price">${p.prix} €</div>
@@ -48,12 +48,12 @@ function afficherProduits(liste) {
     }).join('');
 }
 
-// 4. Gestion du Panier (Local Storage)
+// 4. GESTION DU PANIER
 function ajouterAuPanier(id, nom, prix) {
     panier.push({ id, nom, prix });
     localStorage.setItem('monPanier', JSON.stringify(panier));
     updateCartDisplay();
-    showNotify(nom + " ajouté !");
+    showNotify(nom + " ajouté au panier !");
 }
 
 function updateCartDisplay() {
@@ -70,7 +70,9 @@ function updateCartDisplay() {
         itemsDiv.innerHTML += `
             <div class="cart-item" style="display:flex; justify-content:space-between; margin-bottom:12px; background:#0f172a; padding:10px; border-radius:8px; border: 1px solid #334155;">
                 <span style="font-size:0.9rem;">${item.nom}</span>
-                <span style="font-weight:bold;">${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:5px;">✕</button></span>
+                <span style="font-weight:bold;">${item.prix} € 
+                    <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:8px;">✕</button>
+                </span>
             </div>`;
     });
     
@@ -84,19 +86,23 @@ function retirerDuPanier(index) {
     updateCartDisplay();
 }
 
-// 5. VALIDATION ET REDIRECTION PAIEMENT (LA MODIF EST ICI)
+// 5. FONCTION DE VALIDATION (Avec redirection forcée)
 async function validerCommande() {
-    // Vérifier si l'utilisateur est bien connecté
+    // A. Vérification connexion
     if (!pb.authStore.isValid) {
-        alert("🔒 Connectez-vous pour finaliser votre commande.");
+        alert("🔒 Vous devez être connecté pour commander.");
         window.location.href = "login.html";
         return;
     }
 
-    if (panier.length === 0) return alert("Votre panier est vide !");
-    
+    // B. Vérification panier vide
+    if (panier.length === 0) {
+        alert("Votre panier est vide !");
+        return;
+    }
+
     try {
-        // Boucle pour baisser les stocks dans PocketBase
+        // C. Mise à jour des stocks dans PocketBase
         for (const item of panier) {
             const record = await pb.collection('produits').getOne(item.id);
             await pb.collection('produits').update(item.id, {
@@ -104,25 +110,25 @@ async function validerCommande() {
             });
         }
         
-        // On stocke le total pour la page de paiement
-        const totalPaiement = document.getElementById('cart-total').innerText;
-        localStorage.setItem('dernierTotal', totalPaiement);
+        // D. Sauvegarde du total pour la page de paiement
+        const totalAffiche = document.getElementById('cart-total').innerText;
+        localStorage.setItem('totalAPayer', totalAffiche);
 
-        // On vide le panier
+        // E. Nettoyage
         panier = [];
         localStorage.removeItem('monPanier');
 
-        // REDIRECTION SANS ALERTE BLOQUANTE
-        console.log("Direction : paiement.html");
+        // F. REDIRECTION VERS PAIEMENT.HTML
+        console.log("Validation réussie, redirection...");
         window.location.assign("paiement.html");
 
     } catch (err) {
-        console.error("Erreur de validation:", err);
-        alert("Une erreur est survenue lors de la validation : " + err.message);
+        console.error("Erreur lors de la validation:", err);
+        alert("Erreur serveur : Impossible de mettre à jour le stock. Vérifiez vos droits d'accès dans PocketBase.");
     }
 }
 
-// 6. Navigation Bar (Login/Admin)
+// 6. NAVBAR & AUTHENTIFICATION
 function updateNavbar() {
     const userMenu = document.getElementById('user-menu');
     if (!userMenu) return;
@@ -131,14 +137,15 @@ function updateNavbar() {
         const user = pb.authStore.model;
         let html = `<span style="color: #4ade80; font-weight: bold;">👋 ${user.name || 'Client'}</span>`;
         
+        // Si c'est l'admin (ajuste l'email si besoin)
         if (user.email === 'admin@test.com' || user.name === 'Admin') {
-            html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; border: 1px solid #fbbf24; padding: 4px 8px; border-radius: 5px;">⚙️ Gestion</a>`;
+            html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; border: 1px solid #fbbf24; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;">⚙️ GESTION</a>`;
         }
         
-        html += `<button onclick="logout()" style="margin-left:15px; background:none; border:none; color:#ef4444; cursor:pointer;">Déconnexion</button>`;
+        html += `<button onclick="logout()" style="margin-left:15px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">[Quitter]</button>`;
         userMenu.innerHTML = html;
     } else {
-        userMenu.innerHTML = `<a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Connexion</a>`;
+        userMenu.innerHTML = `<a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold; border: 1px solid #3b82f6; padding: 5px 15px; border-radius: 5px;">Connexion</a>`;
     }
 }
 
@@ -147,9 +154,10 @@ function logout() {
     window.location.reload();
 }
 
-// Utilitaires (Panier, Notifications, Filtres)
+// 7. UTILITAIRES
 function toggleCart() {
-    document.getElementById('cart-sidebar').classList.toggle('open');
+    const sidebar = document.getElementById('cart-sidebar');
+    if(sidebar) sidebar.classList.toggle('open');
 }
 
 function showNotify(msg) {
@@ -176,8 +184,9 @@ function filtrerParCategorie(cat) {
 
 function filtrer() {
     const q = document.getElementById('search').value.toLowerCase();
-    afficherProduits(tousLesProduits.filter(p => p.nom.toLowerCase().includes(q)));
+    const resultats = tousLesProduits.filter(p => p.nom.toLowerCase().includes(q));
+    afficherProduits(resultats);
 }
 
-// Lancement
+// LANCEMENT
 initialiser();
