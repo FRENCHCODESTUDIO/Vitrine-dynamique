@@ -2,13 +2,13 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 let tousLesProduits = [];
 let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
 
-// 1. Initialisation au chargement
+// 1. Initialisation
 async function initialiser() {
     updateNavbar();
     await chargerBoutique();
 }
 
-// 2. Charger les produits depuis PocketBase
+// 2. Charger les produits
 async function chargerBoutique() {
     try {
         tousLesProduits = await pb.collection('produits').getFullList({ sort: 'nom' });
@@ -17,11 +17,10 @@ async function chargerBoutique() {
         updateCartDisplay();
     } catch (err) {
         console.error("Erreur PocketBase:", err);
-        document.getElementById('vitrine').innerHTML = `<p style="color:white; text-align:center;">⚠️ Erreur serveur PocketBase</p>`;
     }
 }
 
-// 3. Afficher les produits avec badges de STOCK
+// 3. Affichage des cartes produits
 function afficherProduits(liste) {
     const vitrine = document.getElementById('vitrine');
     if (!vitrine) return;
@@ -36,19 +35,14 @@ function afficherProduits(liste) {
                 <div class="image-container"><img src="${urlPhoto}" alt="${p.nom}"></div>
                 <div class="content">
                     <small style="color:#94a3b8">${p.categorie || 'Général'}</small>
-                    
-                    <span class="stock-badge ${alerteStock ? 'low-stock' : ''}" 
-                          style="color: ${rupture ? '#ef4444' : (alerteStock ? '#fbbf24' : '#4ade80')}; font-weight: bold; font-size: 0.8rem;">
-                        ${rupture ? 'Rupture' : p.stock + ' en stock'}
-                    </span>
-
+                    <div style="color: ${rupture ? '#ef4444' : (alerteStock ? '#fbbf24' : '#4ade80')}; font-weight: bold; font-size: 0.85rem; margin-top:5px;">
+                        ${rupture ? '❌ Rupture' : `✅ Stock: ${p.stock}`}
+                    </div>
                     <h3>${p.nom}</h3>
                     <div class="price">${p.prix} €</div>
                 </div>
-                <button class="btn-buy" 
-                        onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', ${p.prix})" 
-                        ${rupture ? 'disabled style="background:#444; cursor:not-allowed;"' : ''}>
-                    ${rupture ? 'Indisponible' : 'Ajouter'}
+                <button class="btn-buy" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', ${p.prix})" ${rupture ? 'disabled' : ''}>
+                    ${rupture ? 'Indisponible' : 'Ajouter au panier'}
                 </button>
             </div>`;
     }).join('');
@@ -74,9 +68,9 @@ function updateCartDisplay() {
     panier.forEach((item, index) => {
         total += item.prix;
         itemsDiv.innerHTML += `
-            <div class="cart-item" style="display:flex; justify-content:space-between; margin-bottom:10px; background:#1e293b; padding:8px; border-radius:5px;">
-                <span>${item.nom}</span>
-                <span>${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer;">❌</button></span>
+            <div class="cart-item" style="display:flex; justify-content:space-between; margin-bottom:12px; background:#0f172a; padding:10px; border-radius:8px; border: 1px solid #334155;">
+                <span style="font-size:0.9rem;">${item.nom}</span>
+                <span style="font-weight:bold;">${item.prix} € <button onclick="retirerDuPanier(${index})" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:5px;">✕</button></span>
             </div>`;
     });
     
@@ -90,49 +84,60 @@ function retirerDuPanier(index) {
     updateCartDisplay();
 }
 
-// 5. VALIDATION COMMANDE (Correction de l'erreur 404/Not Found)
+// 5. VALIDATION ET REDIRECTION PAIEMENT
 async function validerCommande() {
+    // Sécurité : On vérifie si le client est connecté
+    if (!pb.authStore.isValid) {
+        alert("🔒 Veuillez vous connecter pour finaliser votre commande.");
+        window.location.href = "login.html";
+        return;
+    }
+
     if (panier.length === 0) return alert("Votre panier est vide !");
     
     try {
+        // Déduction des stocks dans PocketBase
         for (const item of panier) {
-            // Récupération en temps réel pour éviter les erreurs de stock
             const record = await pb.collection('produits').getOne(item.id);
             await pb.collection('produits').update(item.id, {
                 "stock": record.stock - 1
             });
         }
         
-        alert("🎉 Commande validée !");
+        // On sauvegarde le total pour la page de paiement
+        const total = document.getElementById('cart-total').innerText;
+        localStorage.setItem('dernierTotal', total);
+
+        // On vide le panier avant de partir
         panier = [];
         localStorage.removeItem('monPanier');
-        updateCartDisplay();
-        toggleCart();
-        await chargerBoutique(); // On rafraîchit la vitrine
+
+        // REDIRECTION VERS LA PAGE DE PAIEMENT
+        window.location.assign("paiement.html");
+
     } catch (err) {
         console.error(err);
-        alert("Erreur lors de la validation. Assurez-vous d'être connecté.");
+        alert("Erreur lors de la validation : " + err.message);
     }
 }
 
-// 6. Gestion barre de navigation (Admin)
+// 6. Navbar (Admin / Client)
 function updateNavbar() {
     const userMenu = document.getElementById('user-menu');
     if (!userMenu) return;
 
-    const user = pb.authStore.model;
-
-    if (pb.authStore.isValid && user) {
-        let html = `<span style="color: #4ade80; font-weight: bold;">👋 ${user.name || 'Admin'}</span>`;
+    if (pb.authStore.isValid) {
+        const user = pb.authStore.model;
+        let html = `<span style="color: #4ade80;">👋 ${user.name || 'Client'}</span>`;
         
-        if (user.email === 'admin@test.com' || user.name === 'Admin') {
-            html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; font-weight: bold; border: 1px solid #fbbf24; padding: 5px 10px; border-radius: 5px;">⚙️ Gestion</a>`;
+        if (user.email === 'admin@test.com') {
+            html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; border: 1px solid #fbbf24; padding: 4px 8px; border-radius: 5px;">⚙️ Gestion</a>`;
         }
         
-        html += `<button onclick="logout()" style="margin-left:15px; background:none; border:none; color:#ef4444; cursor:pointer;">[Déconnexion]</button>`;
+        html += `<button onclick="logout()" style="margin-left:15px; background:none; border:none; color:#ef4444; cursor:pointer;">Déconnexion</button>`;
         userMenu.innerHTML = html;
     } else {
-        userMenu.innerHTML = `<a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Connexion</a>`;
+        userMenu.innerHTML = `<a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Se connecter</a>`;
     }
 }
 
@@ -141,7 +146,7 @@ function logout() {
     window.location.reload();
 }
 
-// Fonctions utilitaires (Filtres, Notif, Sidebar)
+// Utilitaires
 function toggleCart() {
     document.getElementById('cart-sidebar').classList.toggle('open');
 }
@@ -173,5 +178,4 @@ function filtrer() {
     afficherProduits(tousLesProduits.filter(p => p.nom.toLowerCase().includes(q)));
 }
 
-// Lancement global
 initialiser();
