@@ -17,9 +17,16 @@
         
         <div id="category-bar" class="category-filters"></div>
 
-        <div class="controls">
-            <input type="text" id="search" placeholder="Chercher un composant (ex: Thermalright...)" oninput="filtrer()">
-        </div>
+       <div class="controls" style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 20px;">
+    <input type="text" id="search" placeholder="🔍 Rechercher un produit..." oninput="filtrerEtTrier()" style="width: 300px; margin: 0;">
+    
+    <select id="sort-select" onchange="filtrerEtTrier()" style="padding: 10px; border-radius: 25px; background: #1e293b; color: white; border: 1px solid #334155; cursor: pointer;">
+        <option value="nom">Trier par : Nom (A-Z)</option>
+        <option value="prix-asc">Prix : Croissant ↑</option>
+        <option value="prix-desc">Prix : Décroissant ↓</option>
+        <option value="stock-desc">Meilleures ventes (Stock)</option>
+    </select>
+</div>
     </header>
 
     <div id="vitrine" class="container">
