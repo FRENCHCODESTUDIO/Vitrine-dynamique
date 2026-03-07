@@ -2,9 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion - Ma Boutique</title>
+    <title>Connexion - TechShop</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
 <body style="background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif;">
 
@@ -14,8 +14,7 @@
         <form id="login-form" style="display: flex; flex-direction: column; gap: 15px;">
             <input type="email" id="email" placeholder="Email" required style="padding: 12px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white;">
             <input type="password" id="password" placeholder="Mot de passe" required style="padding: 12px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white;">
-            
-            <button type="submit" class="btn-buy" style="padding: 12px; font-weight: bold; cursor: pointer;">Connexion</button>
+            <button type="submit" style="padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Connexion</button>
         </form>
         
         <p id="error-msg" style="color: #ef4444; font-size: 0.9rem; text-align: center; margin-top: 15px; display: none;"></p>
@@ -26,7 +25,6 @@
     </div>
 
     <script>
-        // Remplace par ton IP si tu testes sur le Wi-Fi
         const pb = new PocketBase('http://127.0.0.1:8090');
 
         document.getElementById('login-form').onsubmit = async (e) => {
@@ -36,12 +34,11 @@
             const errorP = document.getElementById('error-msg');
 
             try {
-                // Tentative de connexion
                 await pb.collection('users').authWithPassword(email, pass);
-                // Si ça marche, on retourne à l'accueil
-                window.location.href = "index.html";
+                // On utilise replace pour éviter de revenir en arrière sur le login
+                window.location.replace("index.html");
             } catch (err) {
-                errorP.innerText = "Identifiants incorrects";
+                errorP.innerText = "Email ou mot de passe incorrect";
                 errorP.style.display = "block";
             }
         };
