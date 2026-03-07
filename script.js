@@ -151,6 +151,43 @@ function showNotify(msg) {
     n.style.display = 'block';
     setTimeout(() => n.style.display = 'none', 3000);
 }
+// --- PARTIE À AJOUTER À LA FIN DE TON SCRIPT.JS ---
+
+function updateNavbar() {
+    const userMenu = document.getElementById('user-menu');
+    if (!userMenu) return; // Sécurité si l'élément n'existe pas encore
+
+    const user = pb.authStore.model; // On regarde si quelqu'un est connecté dans PocketBase
+
+    if (user) {
+        // 1. Si l'utilisateur est connecté
+        let html = `<span style="color: #4ade80; font-weight: bold;">👋 ${user.name || 'Admin'}</span>`;
+        
+        // 2. ON VÉRIFIE SI C'EST L'ADMIN
+        // On vérifie soit par l'email, soit par un pseudo
+        if (user.email === 'admin@test.com' || user.name === 'Admin') {
+            html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; font-weight: bold; border: 1px solid #fbbf24; padding: 5px 10px; border-radius: 5px;">⚙️ Gestion Stock</a>`;
+        }
+        
+        // 3. Bouton déconnexion
+        html += `<button onclick="logout()" style="margin-left:15px; background:none; border:none; color:#ef4444; cursor:pointer; font-size: 0.9rem;">[Déconnexion]</button>`;
+        
+        userMenu.innerHTML = html;
+    } else {
+        // Si personne n'est connecté, on affiche le lien de connexion
+        userMenu.innerHTML = `<a href="login.html" id="btn-login" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Connexion</a>`;
+    }
+}
+
+function logout() {
+    pb.authStore.clear(); // On vide la session PocketBase
+    alert("Vous avez été déconnecté.");
+    window.location.reload(); // On recharge la page pour mettre à jour l'affichage
+}
+
+// TRÈS IMPORTANT : Appelle la fonction au chargement de la boutique
+// Ajoute cette ligne à l'intérieur de ta fonction chargerBoutique() ou tout en bas du fichier
+updateNavbar();
 
 // Lancement
 chargerBoutique();
