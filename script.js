@@ -2,13 +2,13 @@ const pb = new PocketBase('http://127.0.0.1:8090');
 let tousLesProduits = [];
 let panier = JSON.parse(localStorage.getItem('monPanier')) || [];
 
-// 1. Initialisation
+// 1. Initialisation au démarrage
 async function initialiser() {
     updateNavbar();
     await chargerBoutique();
 }
 
-// 2. Charger les produits
+// 2. Charger les produits depuis PocketBase
 async function chargerBoutique() {
     try {
         tousLesProduits = await pb.collection('produits').getFullList({ sort: 'nom' });
@@ -20,7 +20,7 @@ async function chargerBoutique() {
     }
 }
 
-// 3. Affichage des cartes produits
+// 3. Afficher les cartes produits
 function afficherProduits(liste) {
     const vitrine = document.getElementById('vitrine');
     if (!vitrine) return;
@@ -48,7 +48,7 @@ function afficherProduits(liste) {
     }).join('');
 }
 
-// 4. Gestion du Panier
+// 4. Gestion du Panier (Local Storage)
 function ajouterAuPanier(id, nom, prix) {
     panier.push({ id, nom, prix });
     localStorage.setItem('monPanier', JSON.stringify(panier));
@@ -84,11 +84,11 @@ function retirerDuPanier(index) {
     updateCartDisplay();
 }
 
-// 5. VALIDATION ET REDIRECTION PAIEMENT
+// 5. VALIDATION ET REDIRECTION PAIEMENT (LA MODIF EST ICI)
 async function validerCommande() {
-    // Sécurité : On vérifie si le client est connecté
+    // Vérifier si l'utilisateur est bien connecté
     if (!pb.authStore.isValid) {
-        alert("🔒 Veuillez vous connecter pour finaliser votre commande.");
+        alert("🔒 Connectez-vous pour finaliser votre commande.");
         window.location.href = "login.html";
         return;
     }
@@ -96,7 +96,7 @@ async function validerCommande() {
     if (panier.length === 0) return alert("Votre panier est vide !");
     
     try {
-        // Déduction des stocks dans PocketBase
+        // Boucle pour baisser les stocks dans PocketBase
         for (const item of panier) {
             const record = await pb.collection('produits').getOne(item.id);
             await pb.collection('produits').update(item.id, {
@@ -104,40 +104,41 @@ async function validerCommande() {
             });
         }
         
-        // On sauvegarde le total pour la page de paiement
-        const total = document.getElementById('cart-total').innerText;
-        localStorage.setItem('dernierTotal', total);
+        // On stocke le total pour la page de paiement
+        const totalPaiement = document.getElementById('cart-total').innerText;
+        localStorage.setItem('dernierTotal', totalPaiement);
 
-        // On vide le panier avant de partir
+        // On vide le panier
         panier = [];
         localStorage.removeItem('monPanier');
 
-        // REDIRECTION VERS LA PAGE DE PAIEMENT
+        // REDIRECTION SANS ALERTE BLOQUANTE
+        console.log("Direction : paiement.html");
         window.location.assign("paiement.html");
 
     } catch (err) {
-        console.error(err);
-        alert("Erreur lors de la validation : " + err.message);
+        console.error("Erreur de validation:", err);
+        alert("Une erreur est survenue lors de la validation : " + err.message);
     }
 }
 
-// 6. Navbar (Admin / Client)
+// 6. Navigation Bar (Login/Admin)
 function updateNavbar() {
     const userMenu = document.getElementById('user-menu');
     if (!userMenu) return;
 
     if (pb.authStore.isValid) {
         const user = pb.authStore.model;
-        let html = `<span style="color: #4ade80;">👋 ${user.name || 'Client'}</span>`;
+        let html = `<span style="color: #4ade80; font-weight: bold;">👋 ${user.name || 'Client'}</span>`;
         
-        if (user.email === 'admin@test.com') {
+        if (user.email === 'admin@test.com' || user.name === 'Admin') {
             html += `<a href="admin.html" style="margin-left:15px; color: #fbbf24; text-decoration: none; border: 1px solid #fbbf24; padding: 4px 8px; border-radius: 5px;">⚙️ Gestion</a>`;
         }
         
         html += `<button onclick="logout()" style="margin-left:15px; background:none; border:none; color:#ef4444; cursor:pointer;">Déconnexion</button>`;
         userMenu.innerHTML = html;
     } else {
-        userMenu.innerHTML = `<a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Se connecter</a>`;
+        userMenu.innerHTML = `<a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">Connexion</a>`;
     }
 }
 
@@ -146,7 +147,7 @@ function logout() {
     window.location.reload();
 }
 
-// Utilitaires
+// Utilitaires (Panier, Notifications, Filtres)
 function toggleCart() {
     document.getElementById('cart-sidebar').classList.toggle('open');
 }
@@ -178,4 +179,5 @@ function filtrer() {
     afficherProduits(tousLesProduits.filter(p => p.nom.toLowerCase().includes(q)));
 }
 
+// Lancement
 initialiser();
