@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Historique | TechStore</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
+</head>
+<body style="background: #0f172a; color: white; padding: 40px;">
+
+    <div style="max-width: 800px; margin: 0 auto;">
+        <a href="index.html" style="color: #3b82f6; text-decoration: none;">← Retour boutique</a>
+        <h2 style="margin-top: 20px;">📦 Mon Historique de Commandes</h2>
+        
+        <div id="liste-commandes" style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
+            </div>
+    </div>
+
+    <script>
+        const pb = new PocketBase('http://127.0.0.1:8090');
+        
+        async function chargerHistorique() {
+            if (!pb.authStore.isValid) return window.location.href = "login.html";
+            
+            // On récupère uniquement les commandes du client connecté
+            const records = await pb.collection('commandes').getFullList({
+                filter: `client = "${pb.authStore.model.id}"`,
+                sort: '-created' // Plus récentes en premier
+            });
+
+            const div = document.getElementById('liste-commandes');
+            div.innerHTML = records.map(c => `
+                <div style="background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
+                    <div style="display:flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #94a3b8;">Commande du ${new Date(c.created).toLocaleDateString()}</span>
+                        <span style="color: #4ade80; font-weight: bold;">${c.total} €</span>
+                    </div>
+                    <div style="font-size: 0.9rem;">Articles : ${c.produits}</div>
+                </div>
+            `).join('') || "<p>Aucune commande passée.</p>";
+        }
+
+        chargerHistorique();
+    </script>
+</body>
+</html>
