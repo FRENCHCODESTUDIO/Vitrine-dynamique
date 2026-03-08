@@ -2,50 +2,53 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>TechStore | Boutique</title>
+    <title>TechStore | Composants PC</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
 <body>
     <header>
-        <h1 style="margin:0; font-size: 1.5rem; color: #4ade80;">TechStore</h1>
+        <h1 style="margin:0; color:#4ade80;">TechStore</h1>
         <div id="user-menu"></div>
     </header>
 
-    <div class="controls" style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
-        <div style="display:flex; gap:10px; width:100%; max-width:600px;">
-            <input type="text" id="search" placeholder="🔍 Rechercher..." oninput="filtrerEtTrier()" style="flex:2;">
-            <select id="sort-select" onchange="filtrerEtTrier()" style="flex:1;">
+    <div class="controls">
+        <div style="display:flex; gap:10px; width:100%; max-width:600px; margin: 0 auto 15px;">
+            <input type="text" id="search" placeholder="🔍 Rechercher un composant..." oninput="filtrerEtTrier()">
+            <select id="sort-select" onchange="filtrerEtTrier()">
                 <option value="nom">Nom (A-Z)</option>
                 <option value="prix-asc">Prix Croissant ↑</option>
                 <option value="prix-desc">Prix Décroissant ↓</option>
             </select>
         </div>
-        <div id="category-bar" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;"></div>
+        <div id="category-bar" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
     </div>
 
     <div id="vitrine" class="container"></div>
 
     <div id="cart-sidebar">
-        <h2 style="margin-top:0;">🛒 Panier</h2>
-        <div id="cart-items" style="max-height:300px; overflow-y:auto; margin-bottom:20px;"></div>
+        <h2 style="margin-top:0;">🛒 Votre Panier</h2>
+        <div id="cart-items" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
         
-        <div style="background:#0f172a; padding:15px; border-radius:10px; border:1px solid #334155; margin-bottom:20px;">
-            <label style="font-size:0.8rem; color:#94a3b8;">Code promo ?</label>
+        <div class="promo-box">
+            <label>Code promo ?</label>
             <div style="display:flex; gap:5px; margin-top:5px;">
-                <input type="text" id="promo-input" placeholder="Ex: PROMO30" style="padding:8px; flex:1;">
-                <button onclick="appliquerPromo()" style="background:#4ade80; border:none; padding:0 10px; border-radius:5px; cursor:pointer;">OK</button>
+                <input type="text" id="promo-input" placeholder="Ex: PROMO30">
+                <button onclick="appliquerPromo()" class="btn-promo-ok">OK</button>
             </div>
-            <div id="promo-msg" style="font-size:0.7rem; margin-top:5px; min-height:12px;"></div>
+            <div id="promo-msg"></div>
         </div>
 
-        <h3 style="display:flex; justify-content:space-between;">Total: <span id="cart-total">0€</span></h3>
-        <button class="btn-buy" onclick="validerCommande()" style="border-radius:10px;">Commander</button>
-        <button onclick="toggleCart()" style="background:none; color:#94a3b8; border:none; width:100%; margin-top:10px; cursor:pointer;">Fermer</button>
+        <h3 style="display: flex; justify-content: space-between; border-top: 1px solid #334155; padding-top:15px;">
+            Total: <span id="cart-total">0€</span>
+        </h3>
+        
+        <button class="btn-buy" onclick="validerCommande()" style="border-radius: 10px;">Confirmer la commande</button>
+        <button onclick="toggleCart()" style="background:none; color:#94a3b8; border:none; margin-top:15px; cursor:pointer; width:100%;">Fermer</button>
     </div>
 
-    <div id="cart-icon" onclick="toggleCart()" style="position:fixed; bottom:20px; right:20px; background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:999;">
-        🛒 <span id="cart-count" style="position:absolute; top:0; right:0; background:red; border-radius:50%; padding:2px 7px; font-size:0.7rem;">0</span>
+    <div id="cart-icon" onclick="toggleCart()">
+        🛒 <span id="cart-count">0</span>
     </div>
 
     <script src="script.js"></script>
