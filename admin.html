@@ -2,141 +2,86 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Admin Complet | TechStore</title>
+    <title>Admin Panel | TechStore</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
     <style>
-        .admin-section { background: #1e293b; padding: 20px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #334155; }
-        h2 { border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        input, select { margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #475569; background: #0f172a; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
-        th { color: #94a3b8; font-weight: normal; }
-        .btn-delete { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .btn-add { background: #4ade80; color: #064e3b; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; padding: 12px; }
-        .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+        .admin-box { background:#1e293b; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #334155; }
+        input { width:100%; padding:10px; margin:5px 0; background:#0f172a; color:white; border:1px solid #475569; border-radius:5px; box-sizing:border-box; }
+        table { width:100%; color:white; border-collapse:collapse; margin-top:15px; }
+        th, td { text-align:left; padding:10px; border-bottom:1px solid #334155; }
+        .btn-add { background:#4ade80; color:#064e3b; width:100%; padding:12px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; }
     </style>
 </head>
-<body style="padding: 40px; max-width: 1100px; margin: 0 auto; background: #0f172a; color: white;">
+<body style="background:#0f172a; color:white; padding:30px; max-width:900px; margin:0 auto;">
 
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-        <h1 style="margin:0;">⚙️ Dashboard Administrateur</h1>
-        <a href="index.html" style="color: #3b82f6; text-decoration: none; font-weight: bold;">← Retour Boutique</a>
-    </header>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h1>⚙️ Administration</h1>
+        <a href="index.html" style="color:#3b82f6; text-decoration:none;">← Boutique</a>
+    </div>
 
-    <div class="admin-section">
-        <h2 style="color: #4ade80;">📦 Ajouter un nouveau produit</h2>
-        <form id="product-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <input type="text" id="p-nom" placeholder="Nom du produit" required>
-            <input type="number" id="p-prix" placeholder="Prix (€)" required>
-            <input type="text" id="p-cat" placeholder="Catégorie (ex: Batterie, Écran)">
-            <input type="number" id="p-stock" placeholder="Quantité en stock" required>
-            <div style="grid-column: span 2;">
-                <label style="font-size: 0.8rem; color: #94a3b8;">Photo du produit :</label>
-                <input type="file" id="p-photo">
-            </div>
-            <button type="submit" class="btn-add" style="grid-column: span 2;">💾 Enregistrer le produit</button>
+    <div class="admin-box">
+        <h2 style="color:#4ade80; margin-top:0;">📦 Nouveau Produit</h2>
+        <form id="form-produit">
+            <input type="text" id="n-nom" placeholder="Nom du produit" required>
+            <input type="number" id="n-prix" placeholder="Prix (€)" required>
+            <input type="text" id="n-cat" placeholder="Catégorie">
+            <input type="number" id="n-stock" placeholder="Stock" required>
+            <input type="file" id="n-photo">
+            <button type="submit" class="btn-add">ENREGISTRER</button>
         </form>
     </div>
 
-    <div class="admin-section" style="border-left: 4px solid #fbbf24;">
-        <h2 style="color: #fbbf24;">🏷️ Codes Promo</h2>
-        <form id="promo-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" id="promo-code" placeholder="Code (ex: HIVER20)" style="flex: 2;">
-            <input type="number" id="promo-reduc" placeholder="-%" style="flex: 1;">
-            <button type="submit" class="btn-add" style="flex: 1; background: #fbbf24;">Créer</button>
+    <div class="admin-box" style="border-left:5px solid #fbbf24;">
+        <h2 style="color:#fbbf24; margin-top:0;">🏷️ Codes Promo</h2>
+        <form id="form-promo" style="display:flex; gap:10px;">
+            <input type="text" id="c-code" placeholder="Code (ex: PROMO30)" required>
+            <input type="number" id="c-reduc" placeholder="-%" required style="width:80px;">
+            <button type="submit" style="background:#fbbf24; color:#451a03; border:none; border-radius:5px; padding:0 15px; font-weight:bold; cursor:pointer;">AJOUTER</button>
         </form>
-        <table>
-            <thead>
-                <tr><th>Code</th><th>Réduction</th><th>Statut</th><th>Action</th></tr>
-            </thead>
-            <tbody id="promo-list"></tbody>
-        </table>
-    </div>
-
-    <div class="admin-section" style="border-left: 4px solid #3b82f6;">
-        <h2 style="color: #3b82f6;">📜 Dernières Commandes</h2>
-        <table>
-            <thead>
-                <tr><th>Date</th><th>Client</th><th>Articles</th><th>Total</th></tr>
-            </thead>
-            <tbody id="orders-list"></tbody>
+        <table id="table-promos">
+            <thead><tr><th>Code</th><th>Reduction</th><th>Action</th></tr></thead>
+            <tbody></tbody>
         </table>
     </div>
 
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
 
-        // --- CHARGEMENT DES DONNÉES ---
-        async function loadDashboard() {
-            await Promise.all([chargerPromos(), chargerCommandes()]);
-        }
-
-        // --- GESTION PRODUITS ---
-        document.getElementById('product-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const formData = new FormData();
-            formData.append('nom', document.getElementById('p-nom').value);
-            formData.append('prix', document.getElementById('p-prix').value);
-            formData.append('categorie', document.getElementById('p-cat').value);
-            formData.append('stock', document.getElementById('p-stock').value);
-            const photo = document.getElementById('p-photo').files[0];
-            if(photo) formData.append('photo', photo);
-
-            try {
-                await pb.collection('produits').create(formData);
-                alert("✅ Produit ajouté avec succès !");
-                location.reload();
-            } catch (err) { alert("Erreur : " + err.message); }
-        };
-
-        // --- GESTION PROMOS ---
-        async function chargerPromos() {
-            const res = await pb.collection('promos').getFullList();
-            document.getElementById('promo-list').innerHTML = res.map(p => `
-                <tr>
-                    <td style="font-weight:bold;">${p.code}</td>
-                    <td>${p.reduction}%</td>
-                    <td><span class="badge" style="background:${p.actif?'#064e3b':'#450a0a'}; color:${p.actif?'#4ade80':'#ef4444'};">
-                        ${p.actif ? 'ACTIF' : 'INACTIF'}</span></td>
-                    <td><button onclick="deletePromo('${p.id}')" class="btn-delete">🗑️</button></td>
-                </tr>
+        async function listPromos() {
+            const list = await pb.collection('promos').getFullList();
+            document.querySelector('#table-promos tbody').innerHTML = list.map(p => `
+                <tr><td>${p.code}</td><td>${p.reduction}%</td>
+                <td><button onclick="delP('${p.id}')" style="background:#ef4444; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">Suppr</button></td></tr>
             `).join('');
         }
 
-        document.getElementById('promo-form').onsubmit = async (e) => {
+        document.getElementById('form-produit').onsubmit = async (e) => {
             e.preventDefault();
-            try {
-                await pb.collection('promos').create({
-                    code: document.getElementById('promo-code').value.toUpperCase(),
-                    reduction: parseInt(document.getElementById('promo-reduc').value),
-                    actif: true
-                });
-                location.reload();
-            } catch (err) { alert(err.message); }
-        };
-
-        async function deletePromo(id) {
-            if(confirm("Supprimer ce code ?")) {
-                await pb.collection('promos').delete(id);
-                chargerPromos();
-            }
+            const fd = new FormData();
+            fd.append('nom', document.getElementById('n-nom').value);
+            fd.append('prix', document.getElementById('n-prix').value);
+            fd.append('categorie', document.getElementById('n-cat').value);
+            fd.append('stock', document.getElementById('n-stock').value);
+            if(document.getElementById('n-photo').files[0]) fd.append('photo', document.getElementById('n-photo').files[0]);
+            await pb.collection('produits').create(fd);
+            alert("Produit ajouté !"); location.reload();
         }
 
-        // --- HISTORIQUE COMMANDES ---
-        async function chargerCommandes() {
-            const res = await pb.collection('commandes').getFullList({ sort: '-created', expand: 'client' });
-            document.getElementById('orders-list').innerHTML = res.map(o => `
-                <tr>
-                    <td style="color:#94a3b8">${new Date(o.created).toLocaleDateString()}</td>
-                    <td>${o.expand?.client?.name || 'Anonyme'}</td>
-                    <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${o.produits}</td>
-                    <td style="font-weight:bold; color:#4ade80;">${o.total}€</td>
-                </tr>
-            `).join('');
+        document.getElementById('form-promo').onsubmit = async (e) => {
+            e.preventDefault();
+            await pb.collection('promos').create({
+                code: document.getElementById('c-code').value.toUpperCase(),
+                reduction: document.getElementById('c-reduc').value,
+                actif: true
+            });
+            listPromos();
         }
 
-        loadDashboard();
+        async function delP(id) {
+            if(confirm("Supprimer ?")) { await pb.collection('promos').delete(id); listPromos(); }
+        }
+        listPromos();
     </script>
 </body>
 </html>
