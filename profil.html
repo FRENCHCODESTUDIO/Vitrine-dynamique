@@ -2,45 +2,32 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mon Historique | TechStore</title>
+    <title>Mes Commandes</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
-<body style="background: #0f172a; color: white; padding: 40px;">
-
-    <div style="max-width: 800px; margin: 0 auto;">
-        <a href="index.html" style="color: #3b82f6; text-decoration: none;">← Retour boutique</a>
-        <h2 style="margin-top: 20px;">📦 Mon Historique de Commandes</h2>
-        
-        <div id="liste-commandes" style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
-            </div>
-    </div>
+<body style="padding:40px;">
+    <a href="index.html" style="color:#3b82f6; text-decoration:none;">← Boutique</a>
+    <h1>📦 Mon Historique</h1>
+    <div id="historique-list" style="display:flex; flex-direction:column; gap:15px; margin-top:20px;"></div>
 
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
-        
-        async function chargerHistorique() {
-            if (!pb.authStore.isValid) return window.location.href = "login.html";
-            
-            // On récupère uniquement les commandes du client connecté
-            const records = await pb.collection('commandes').getFullList({
+        async function load() {
+            if(!pb.authStore.isValid) return window.location.href="login.html";
+            const res = await pb.collection('commandes').getFullList({
                 filter: `client = "${pb.authStore.model.id}"`,
-                sort: '-created' // Plus récentes en premier
+                sort: '-created'
             });
-
-            const div = document.getElementById('liste-commandes');
-            div.innerHTML = records.map(c => `
-                <div style="background: #1e293b; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
-                    <div style="display:flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #94a3b8;">Commande du ${new Date(c.created).toLocaleDateString()}</span>
-                        <span style="color: #4ade80; font-weight: bold;">${c.total} €</span>
-                    </div>
-                    <div style="font-size: 0.9rem;">Articles : ${c.produits}</div>
+            document.getElementById('historique-list').innerHTML = res.map(c => `
+                <div style="background:#1e293b; padding:20px; border-radius:10px; border:1px solid #334155;">
+                    <div style="color:#94a3b8; font-size:0.8rem;">Le ${new Date(c.created).toLocaleDateString()}</div>
+                    <div style="margin:10px 0;">${c.produits}</div>
+                    <div style="color:#4ade80; font-weight:bold;">Total: ${c.total}€</div>
                 </div>
-            `).join('') || "<p>Aucune commande passée.</p>";
+            `).join('') || "Aucune commande.";
         }
-
-        chargerHistorique();
+        load();
     </script>
 </body>
 </html>
