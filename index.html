@@ -15,18 +15,26 @@
 
         <h1>TechStore Pro</h1>
         
-        <div id="category-bar" class="category-filters"></div>
-
-       <div class="controls" style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 20px;">
-    <input type="text" id="search" placeholder="🔍 Rechercher un produit..." oninput="filtrerEtTrier()" style="width: 300px; margin: 0;">
+       <div class="controls" style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 20px; flex-wrap: wrap; padding: 0 20px;">
     
-    <select id="sort-select" onchange="filtrerEtTrier()" style="padding: 10px; border-radius: 25px; background: #1e293b; color: white; border: 1px solid #334155; cursor: pointer;">
+    <div style="position: relative; width: 300px;">
+        <input type="text" id="search" placeholder="🔍 Rechercher un produit..." 
+               oninput="filtrerEtTrier()" 
+               style="width: 100%; padding: 12px 20px; border-radius: 25px; background: #1e293b; border: 1px solid #334155; color: white; outline: none;">
+    </div>
+
+    <select id="sort-select" onchange="filtrerEtTrier()" 
+            style="padding: 12px 20px; border-radius: 25px; background: #1e293b; color: white; border: 1px solid #334155; cursor: pointer; outline: none;">
         <option value="nom">Trier par : Nom (A-Z)</option>
         <option value="prix-asc">Prix : Croissant ↑</option>
         <option value="prix-desc">Prix : Décroissant ↓</option>
-        <option value="stock-desc">Meilleures ventes (Stock)</option>
+        <option value="stock-desc">Plus de stock</option>
     </select>
+
 </div>
+
+<div id="category-bar" class="category-filters" style="margin-bottom: 30px;">
+    </div>
     </header>
 
     <div id="vitrine" class="container">
