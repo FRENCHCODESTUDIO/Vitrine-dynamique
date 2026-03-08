@@ -12,43 +12,40 @@
         <div id="user-menu"></div>
     </header>
 
-    <div class="controls">
-        <input type="text" id="search" placeholder="🔍 Rechercher un composant..." oninput="filtrerEtTrier()" style="flex: 2; min-width: 200px;">
-        <select id="sort-select" onchange="filtrerEtTrier()" style="flex: 1; min-width: 150px;">
-            <option value="nom">Nom (A-Z)</option>
-            <option value="prix-asc">Prix Croissant ↑</option>
-            <option value="prix-desc">Prix Décroissant ↓</option>
-        </select>
+    <div class="controls" style="display:flex; flex-direction:column; align-items:center; gap:15px; padding:20px;">
+        <div style="display:flex; gap:10px; width:100%; max-width:600px;">
+            <input type="text" id="search" placeholder="🔍 Rechercher..." oninput="filtrerEtTrier()" style="flex:2;">
+            <select id="sort-select" onchange="filtrerEtTrier()" style="flex:1;">
+                <option value="nom">Nom (A-Z)</option>
+                <option value="prix-asc">Prix Croissant ↑</option>
+                <option value="prix-desc">Prix Décroissant ↓</option>
+            </select>
+        </div>
+        <div id="category-bar" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;"></div>
     </div>
-
-    <div id="category-bar" style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;"></div>
 
     <div id="vitrine" class="container"></div>
 
     <div id="cart-sidebar">
-        <h2 style="margin-top:0;">🛒 Votre Panier</h2>
-        <div id="cart-items" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
+        <h2 style="margin-top:0;">🛒 Panier</h2>
+        <div id="cart-items" style="max-height:300px; overflow-y:auto; margin-bottom:20px;"></div>
         
-        <div style="background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 20px;">
-            <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px;">Code promo ?</label>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="promo-input" placeholder="Ex: NOEL10" style="padding: 8px; font-size: 0.8rem; flex: 1; border-radius: 5px; background: #1e293b;">
-                <button onclick="appliquerPromo()" style="background: #4ade80; color: #064e3b; border: none; padding: 0 12px; border-radius: 5px; cursor: pointer; font-weight: bold;">OK</button>
+        <div style="background:#0f172a; padding:15px; border-radius:10px; border:1px solid #334155; margin-bottom:20px;">
+            <label style="font-size:0.8rem; color:#94a3b8;">Code promo ?</label>
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <input type="text" id="promo-input" placeholder="Ex: PROMO30" style="padding:8px; flex:1;">
+                <button onclick="appliquerPromo()" style="background:#4ade80; border:none; padding:0 10px; border-radius:5px; cursor:pointer;">OK</button>
             </div>
-            <div id="promo-msg" style="font-size: 0.75rem; margin-top: 8px; min-height: 15px;"></div>
+            <div id="promo-msg" style="font-size:0.7rem; margin-top:5px; min-height:12px;"></div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
-        <h3 style="display: flex; justify-content: space-between;">
-            Total: <span id="cart-total">0€</span>
-        </h3>
-        
-        <button class="btn-buy" onclick="validerCommande()" style="border-radius: 10px; margin-top: 10px;">Confirmer la commande</button>
-        <button onclick="toggleCart()" style="background:none; color:#94a3b8; border:none; margin-top:15px; cursor:pointer; width:100%; font-size: 0.9rem;">Continuer mes achats</button>
+        <h3 style="display:flex; justify-content:space-between;">Total: <span id="cart-total">0€</span></h3>
+        <button class="btn-buy" onclick="validerCommande()" style="border-radius:10px;">Commander</button>
+        <button onclick="toggleCart()" style="background:none; color:#94a3b8; border:none; width:100%; margin-top:10px; cursor:pointer;">Fermer</button>
     </div>
 
-    <div id="cart-icon" onclick="toggleCart()" style="position:fixed; bottom:25px; right:25px; background:#3b82f6; width:65px; height:65px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 999;">
-        🛒 <span id="cart-count" style="position:absolute; top:0; right:0; background:#ef4444; color:white; border-radius:50%; padding:3px 8px; font-size:0.75rem; font-weight: bold;">0</span>
+    <div id="cart-icon" onclick="toggleCart()" style="position:fixed; bottom:20px; right:20px; background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; z-index:999;">
+        🛒 <span id="cart-count" style="position:absolute; top:0; right:0; background:red; border-radius:50%; padding:2px 7px; font-size:0.7rem;">0</span>
     </div>
 
     <script src="script.js"></script>
