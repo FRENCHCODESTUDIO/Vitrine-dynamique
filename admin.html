@@ -2,61 +2,42 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel | TechStore</title>
+    <title>Admin | TechStore</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
-    <style>
-        .admin-box { background:#1e293b; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #334155; }
-        input { width:100%; padding:10px; margin:5px 0; background:#0f172a; color:white; border:1px solid #475569; border-radius:5px; box-sizing:border-box; }
-        table { width:100%; color:white; border-collapse:collapse; margin-top:15px; }
-        th, td { text-align:left; padding:10px; border-bottom:1px solid #334155; }
-        .btn-add { background:#4ade80; color:#064e3b; width:100%; padding:12px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; }
-    </style>
 </head>
-<body style="background:#0f172a; color:white; padding:30px; max-width:900px; margin:0 auto;">
-
+<body style="padding:30px; max-width:900px; margin:0 auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-        <h1>⚙️ Administration</h1>
-        <a href="index.html" style="color:#3b82f6; text-decoration:none;">← Boutique</a>
+        <h1>⚙️ Dashboard Admin</h1>
+        <a href="index.html" style="color:#3b82f6;">← Retour Boutique</a>
     </div>
 
     <div class="admin-box">
-        <h2 style="color:#4ade80; margin-top:0;">📦 Nouveau Produit</h2>
-        <form id="form-produit">
+        <h2 style="color:#4ade80;">📦 Ajouter un Produit</h2>
+        <form id="f-prod">
             <input type="text" id="n-nom" placeholder="Nom du produit" required>
             <input type="number" id="n-prix" placeholder="Prix (€)" required>
-            <input type="text" id="n-cat" placeholder="Catégorie">
+            <input type="text" id="n-cat" placeholder="Catégorie (ex: Watercooling)">
             <input type="number" id="n-stock" placeholder="Stock" required>
             <input type="file" id="n-photo">
-            <button type="submit" class="btn-add">ENREGISTRER</button>
+            <button type="submit" class="btn-buy">CRÉER</button>
         </form>
     </div>
 
-    <div class="admin-box" style="border-left:5px solid #fbbf24;">
-        <h2 style="color:#fbbf24; margin-top:0;">🏷️ Codes Promo</h2>
-        <form id="form-promo" style="display:flex; gap:10px;">
-            <input type="text" id="c-code" placeholder="Code (ex: PROMO30)" required>
+    <div class="admin-box" style="border-left:5px solid #fbbf24; margin-top:20px;">
+        <h2 style="color:#fbbf24;">🏷️ Codes Promo</h2>
+        <form id="f-promo" style="display:flex; gap:10px;">
+            <input type="text" id="c-code" placeholder="Code (ex: NOEL20)" required>
             <input type="number" id="c-reduc" placeholder="-%" required style="width:80px;">
-            <button type="submit" style="background:#fbbf24; color:#451a03; border:none; border-radius:5px; padding:0 15px; font-weight:bold; cursor:pointer;">AJOUTER</button>
+            <button type="submit" style="background:#fbbf24; border:none; border-radius:5px; padding:0 15px; font-weight:bold; cursor:pointer;">OK</button>
         </form>
-        <table id="table-promos">
-            <thead><tr><th>Code</th><th>Reduction</th><th>Action</th></tr></thead>
-            <tbody></tbody>
-        </table>
+        <div id="list-promos" style="margin-top:15px;"></div>
     </div>
 
     <script>
         const pb = new PocketBase('http://127.0.0.1:8090');
 
-        async function listPromos() {
-            const list = await pb.collection('promos').getFullList();
-            document.querySelector('#table-promos tbody').innerHTML = list.map(p => `
-                <tr><td>${p.code}</td><td>${p.reduction}%</td>
-                <td><button onclick="delP('${p.id}')" style="background:#ef4444; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">Suppr</button></td></tr>
-            `).join('');
-        }
-
-        document.getElementById('form-produit').onsubmit = async (e) => {
+        document.getElementById('f-prod').onsubmit = async (e) => {
             e.preventDefault();
             const fd = new FormData();
             fd.append('nom', document.getElementById('n-nom').value);
@@ -66,22 +47,17 @@
             if(document.getElementById('n-photo').files[0]) fd.append('photo', document.getElementById('n-photo').files[0]);
             await pb.collection('produits').create(fd);
             alert("Produit ajouté !"); location.reload();
-        }
+        };
 
-        document.getElementById('form-promo').onsubmit = async (e) => {
+        document.getElementById('f-promo').onsubmit = async (e) => {
             e.preventDefault();
             await pb.collection('promos').create({
                 code: document.getElementById('c-code').value.toUpperCase(),
                 reduction: document.getElementById('c-reduc').value,
                 actif: true
             });
-            listPromos();
-        }
-
-        async function delP(id) {
-            if(confirm("Supprimer ?")) { await pb.collection('promos').delete(id); listPromos(); }
-        }
-        listPromos();
+            location.reload();
+        };
     </script>
 </body>
 </html>
