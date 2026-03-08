@@ -56,21 +56,37 @@ function addToCart(id, nom, prix) {
 }
 
 async function appliquerPromo() {
-    const codeSaisi = document.getElementById('promo-input').value.trim().toUpperCase();
+    const input = document.getElementById('promo-input');
     const msg = document.getElementById('promo-msg');
-    if (!codeSaisi) return;
+    const codeSaisi = input.value.trim(); // On garde exactement ce qui est tapé
+
+    console.log("Tentative de recherche pour le code :", codeSaisi);
 
     try {
+        // On cherche le code. Note: si ta colonne s'appelle 'code', garde 'code'.
+        // Si elle s'appelle 'Code', change le mot juste avant le =
         const promo = await pb.collection('promos').getFirstListItem(`code="${codeSaisi}" && actif=true`);
-        reductionActuelle = promo.reduction;
-        msg.innerHTML = `<span style="color: #4ade80;">✅ Code validé (-${promo.reduction}%)</span>`;
+        
+        console.log("Code trouvé dans PocketBase !", promo);
+        
+        reductionActuelle = Number(promo.reduction);
+        msg.innerHTML = `<span style="color: #4ade80; font-weight: bold;">✅ Promo -${reductionActuelle}% appliquée !</span>`;
+        
+        updateCart(); // On force la mise à jour du prix
     } catch (err) {
+        console.error("Erreur PocketBase :", err.status, err.message);
         reductionActuelle = 0;
-        msg.innerHTML = `<span style="color: #ef4444;">❌ Code incorrect</span>`;
+        
+        if (err.status === 404) {
+            msg.innerHTML = `<span style="color: #ef4444;">❌ Code "${codeSaisi}" inconnu</span>`;
+        } else if (err.status === 403) {
+            msg.innerHTML = `<span style="color: #fbbf24;">⚠️ Erreur de droits (Cadenas PB)</span>`;
+        } else {
+            msg.innerHTML = `<span style="color: #ef4444;">❌ Erreur : ${err.message}</span>`;
+        }
+        updateCart();
     }
-    updateCart();
 }
-
 function updateCart() {
     const list = document.getElementById('cart-items');
     let totalBrut = 0;
