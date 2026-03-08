@@ -2,66 +2,41 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechStore | Boutique High-Tech</title>
+    <title>TechStore | Accueil</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
 <body>
-
     <header>
-        <div id="user-menu" style="display: flex; justify-content: flex-end; align-items: center; gap: 20px;">
-            </div>
-
-        <h1>TechStore Pro</h1>
-        
-       <div class="controls" style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 20px; flex-wrap: wrap; padding: 0 20px;">
-    
-    <div style="position: relative; width: 300px;">
-        <input type="text" id="search" placeholder="🔍 Rechercher un produit..." 
-               oninput="filtrerEtTrier()" 
-               style="width: 100%; padding: 12px 20px; border-radius: 25px; background: #1e293b; border: 1px solid #334155; color: white; outline: none;">
-    </div>
-
-    <select id="sort-select" onchange="filtrerEtTrier()" 
-            style="padding: 12px 20px; border-radius: 25px; background: #1e293b; color: white; border: 1px solid #334155; cursor: pointer; outline: none;">
-        <option value="nom">Trier par : Nom (A-Z)</option>
-        <option value="prix-asc">Prix : Croissant ↑</option>
-        <option value="prix-desc">Prix : Décroissant ↓</option>
-        <option value="stock-desc">Plus de stock</option>
-    </select>
-
-</div>
-
-<div id="category-bar" class="category-filters" style="margin-bottom: 30px;">
-    </div>
+        <h1 style="margin:0; font-size: 1.5rem; color: #4ade80;">TechStore</h1>
+        <div id="user-menu"></div>
     </header>
 
-    <div id="vitrine" class="container">
-        </div>
-
-    <div id="cart-icon" onclick="toggleCart()">
-        🛒 <span id="cart-count" style="position:absolute; top:0; right:0; background:red; border-radius:50%; width:20px; height:20px; font-size:12px; display:flex; justify-content:center; align-items:center;">0</span>
+    <div class="controls">
+        <input type="text" id="search" placeholder="🔍 Rechercher..." oninput="filtrerEtTrier()" style="flex: 2; min-width: 200px;">
+        <select id="sort-select" onchange="filtrerEtTrier()" style="flex: 1; min-width: 150px;">
+            <option value="nom">Nom (A-Z)</option>
+            <option value="prix-asc">Prix Croissant ↑</option>
+            <option value="prix-desc">Prix Décroissant ↓</option>
+        </select>
     </div>
+
+    <div id="category-bar" style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;"></div>
+
+    <div id="vitrine" class="container"></div>
 
     <div id="cart-sidebar">
-        <div style="padding: 25px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Mon Panier</h2>
-                <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
-            </div>
-            <div id="cart-items" style="margin-top:20px; max-height: 60vh; overflow-y:auto;"></div>
-            <div style="margin-top:20px; border-top: 1px solid #334155; padding-top:20px;">
-                <div style="display:flex; justify-content:space-between; font-size:1.3rem; font-weight:bold;">
-                    <span>Total:</span>
-                    <span id="cart-total">0</span>€
-                </div>
-                <button onclick="validerCommande()" class="btn-buy" style="margin-top:20px; border-radius:8px;">Valider l'achat</button>
-            </div>
-        </div>
+        <h2>Votre Panier</h2>
+        <div id="cart-items"></div>
+        <hr>
+        <h3>Total: <span id="cart-total">0</span>€</h3>
+        <button class="btn-buy" onclick="validerCommande()">Valider l'achat</button>
+        <button onclick="toggleCart()" style="background:none; color:white; border:none; margin-top:10px; cursor:pointer; width:100%;">Fermer</button>
     </div>
 
-    <div id="notification" style="position:fixed; bottom:100px; right:30px; background:#4ade80; color:black; padding:15px 25px; border-radius:8px; display:none; font-weight:bold; z-index:2000;"></div>
+    <div id="cart-icon" onclick="toggleCart()" style="position:fixed; bottom:20px; right:20px; background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:1.5rem;">
+        🛒 <span id="cart-count" style="position:absolute; top:0; right:0; background:red; border-radius:50%; padding:2px 7px; font-size:0.7rem;">0</span>
+    </div>
 
     <script src="script.js"></script>
 </body>
